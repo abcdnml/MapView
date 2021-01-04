@@ -123,8 +123,8 @@ public class YXMapViewRefreshHelper {
                 refreshMapLock.lock();
                 if (drawMap) {
                     //刷新地图
-                    Bitmap mapBitmap = Render.renderMap(ldMapBean, ldPathBean);
-                    MatrixUtil.loadMapOffsetAndScale(mapBitmap, mapView);
+//                    Bitmap mapBitmap = Render.renderMap(ldMapBean, ldPathBean);
+//                    MatrixUtil.loadMapOffsetAndScale(mapBitmap, mapView);
 //                    mapView.refreshMapAndPower(mapBitmap);
 
                     //刷新充电桩
@@ -159,7 +159,7 @@ public class YXMapViewRefreshHelper {
                 Log.i(TAG, "update path " + drawPath);
                 if (drawPath) {
                     //刷新路径
-                    Bitmap pathBitmap = Render.renderPath(ldMapBean, ldPathBean);
+//                    Bitmap pathBitmap = Render.renderPath(ldMapBean, ldPathBean);
 //                    mapView.refreshPathLayer(pathBitmap);
 
                     //刷新当前位置

@@ -147,12 +147,12 @@ public class YXMapView extends MapView<YXLayerManager> {
             mapLayer = new MapLayer(this);
             mLayerManager.addLayer(mapLayer);
         }
-        Bitmap mapBitmap = Render.renderMap(ldMapBean, ldPathBean);
+//        Bitmap mapBitmap = Render.renderMap(ldMapBean, ldPathBean);
         if (!hasLoadMap) {
-            hasLoadMap = MatrixUtil.loadMapOffsetAndScale(mapBitmap, this);
+//            hasLoadMap = MatrixUtil.loadMapOffsetAndScale(mapBitmap, this);
         }
 
-        mapLayer.setMapBitmap(mapBitmap);
+//        mapLayer.setMapBitmap(mapBitmap);
     }
 
     public void refreshPathLayer(LDMapBean ldMapBean, LDPathBean ldPathBean) {
@@ -162,8 +162,8 @@ public class YXMapView extends MapView<YXLayerManager> {
             mLayerManager.addLayer(pathLayer);
         }
 
-        Bitmap pathBitmap = Render.renderPath(ldMapBean, ldPathBean);
-        pathLayer.setPathBitmap(pathBitmap);
+//        Bitmap pathBitmap = Render.renderPath(ldMapBean, ldPathBean);
+//        pathLayer.setPathBitmap(pathBitmap);
     }
 
     public void refreshAreaLayer(LDAreaBean ldAreaBean) {
