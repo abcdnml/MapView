@@ -3,8 +3,6 @@ package com.aaa.lib.map.imp.model;
 
 import android.content.Context;
 
-import com.aaa.lib.map.imp.FaultCode;
-
 public class RobotStatus {
     /**
      * 机器清扫状态
@@ -132,8 +130,8 @@ public class RobotStatus {
         }
 
 
-        public void setError(Context context , String error) {
-            errorInfo = FaultCode.getErrMsg(context, error);
+        public void setError(String error) {
+            errorInfo = error;
         }
 
         public String getErrorInfo() {
