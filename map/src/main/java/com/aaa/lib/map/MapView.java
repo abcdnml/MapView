@@ -1,6 +1,7 @@
 package com.aaa.lib.map;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -38,6 +39,7 @@ public class MapView<T extends LayerManager> extends SurfaceView implements Surf
     private void init() {
         getHolder().addCallback(this);
         mMatrix = new Matrix();
+        bgColor = Color.WHITE;
         mTouchHandler = new TouchHandler(this.getContext(), this);
 
     }
