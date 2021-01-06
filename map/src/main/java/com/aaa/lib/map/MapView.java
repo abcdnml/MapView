@@ -1,23 +1,19 @@
 package com.aaa.lib.map;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+import android.view.View;
 
-import com.aaa.lib.map.layer.BaseLayer;
-
-public class MapView<T extends LayerManager> extends SurfaceView implements SurfaceHolder.Callback {
+public class MapView<T extends LayerManager> extends View {
 
     private static final String TAG = MapView.class.getSimpleName();
 
-    private SurfaceHolder mHolder;
     private TouchHandler mTouchHandler;
-    private DrawHelper mDrawHelper;
     protected Matrix mMatrix;
     protected T mLayerManager;
     private boolean canTouch = true;
@@ -37,34 +33,33 @@ public class MapView<T extends LayerManager> extends SurfaceView implements Surf
     }
 
     private void init() {
-        getHolder().addCallback(this);
         mMatrix = new Matrix();
         bgColor = Color.WHITE;
         mTouchHandler = new TouchHandler(this.getContext(), this);
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        canvas.drawColor(bgColor);
+        if (mLayerManager.mLayerList != null) {
+            Log.i(TAG, "draw layer size :" + mLayerManager.mLayerList.size());
+            for (int i = 0; i < mLayerManager.mLayerList.size(); i++) {
+                Log.i(TAG, "draw layer :" + mLayerManager.mLayerList.get(i).getClass().getSimpleName());
+                mLayerManager.mLayerList.get(i).draw(canvas);
+            }
+        }
 
     }
 
     public void refresh() {
-        //TODO 当前只能刷新所有图层 需要做局部刷新优化
-        Log.i(TAG, "refresh");
-        if (mDrawHelper != null) {
-            mDrawHelper.refresh();
-        }
+        invalidate();
     }
 
-    public void refreshLayer(BaseLayer layer) {
-        if (mDrawHelper != null) {
-            if (layer != null) {
-                mDrawHelper.refresh(layer);
-            } else {
-                mDrawHelper.refresh();
-            }
-        }
-    }
 
     public void translate(float x, float y) {
         mMatrix.postTranslate(x, y);
-        refresh();
+        invalidate();
     }
 
     public void setBackgroundColor(int color) {
@@ -106,34 +101,6 @@ public class MapView<T extends LayerManager> extends SurfaceView implements Surf
         return mTouchHandler.onTouchEvent(event);
     }
 
-    /**
-     * Surface callback
-     *
-     * @param holder
-     */
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        Log.i(TAG, "surfaceCreated");
-        mHolder = holder;
-
-        mDrawHelper = new DrawHelper(mHolder);
-        mDrawHelper.setLayerList(mLayerManager.mLayerList);
-        mDrawHelper.setBgColor(bgColor);
-        mDrawHelper.refresh();
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        Log.i(TAG, "surfaceChanged");
-        mHolder = holder;
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        Log.i(TAG, "surfaceDestroyed");
-        mHolder = null;
-        mDrawHelper.release();
-    }
 
     public void setCanTouch(boolean canTouch) {
         this.canTouch = canTouch;
