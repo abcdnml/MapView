@@ -25,8 +25,14 @@ public class MatrixUtil {
 
         //计算缩放比例， 选取缩放比小的  保证控件能完全显示图片
         float mBitmapScale = calculateScaleFactor(bitmap.getWidth(), bitmap.getHeight(), mMapView.getWidth(), mMapView.getHeight());
-        mMapView.getTransform().setScale(mBitmapScale, mBitmapScale);
+        if (mBitmapScale > MAX_ZOOM) {
+            mBitmapScale = MAX_ZOOM;
+        }
+        if (mBitmapScale < MIN_ZOOM) {
+            mBitmapScale = MIN_ZOOM;
+        }
         Log.i(TAG, "map scale : " + mBitmapScale);
+        mMapView.getTransform().setScale(mBitmapScale, mBitmapScale);
 
         //图片会放到控件中心 ， 计算偏移量
         float offsetX = mMapView.getWidth() - bitmap.getWidth() * mBitmapScale;
