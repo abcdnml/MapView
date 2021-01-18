@@ -13,8 +13,8 @@ public class MapView<T extends LayerManager> extends View {
 
     private static final String TAG = MapView.class.getSimpleName();
 
-    private float max_zoom = 2f;
-    private float min_zoom = 0.5f;
+    protected float max_zoom = 2f;
+    protected float min_zoom = 0.5f;
 
     private TouchHandler mTouchHandler;
     protected Matrix mMatrix;
