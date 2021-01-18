@@ -13,8 +13,12 @@ public class MapView<T extends LayerManager> extends View {
 
     private static final String TAG = MapView.class.getSimpleName();
 
+    private float max_zoom = 2f;
+    private float min_zoom = 0.5f;
+
     private TouchHandler mTouchHandler;
     protected Matrix mMatrix;
+    protected float[] mMatrixValue;
     protected T mLayerManager;
     private boolean canTouch = true;
     private int bgColor;
@@ -34,6 +38,7 @@ public class MapView<T extends LayerManager> extends View {
 
     private void init() {
         mMatrix = new Matrix();
+        mMatrixValue = new float[9];
         bgColor = Color.WHITE;
         mTouchHandler = new TouchHandler(this.getContext(), this);
     }
@@ -53,13 +58,36 @@ public class MapView<T extends LayerManager> extends View {
     }
 
     public void refresh() {
-        invalidate();
+        postInvalidate();
     }
 
+    /**
+     * 缩放
+     *
+     * @param scale   缩放比例
+     * @param centerX 缩放中心点x
+     * @param centerY 缩放中心点y
+     */
+    public void scale(float scale, float centerX, float centerY) {
+        float currentZoom = getCurrentZoom();
+        float targetZoom = currentZoom * scale;
+        if (targetZoom > max_zoom) {
+            scale = max_zoom / currentZoom;
+        } else if (targetZoom < min_zoom) {
+            scale = min_zoom / currentZoom;
+        }
+        mMatrix.postScale(scale, scale, centerX, centerY);
+        postInvalidate();
+    }
+
+    private float getCurrentZoom() {
+        mMatrix.getValues(mMatrixValue);
+        return mMatrixValue[Matrix.MSCALE_X];
+    }
 
     public void translate(float x, float y) {
         mMatrix.postTranslate(x, y);
-        invalidate();
+        postInvalidate();
     }
 
     public void setBackgroundColor(int color) {
@@ -108,6 +136,11 @@ public class MapView<T extends LayerManager> extends View {
 
     public Matrix getTransform() {
         return mMatrix;
+    }
+
+    public void setZoomLimit(float min, float max) {
+        this.min_zoom = min;
+        this.max_zoom = max;
     }
 
 

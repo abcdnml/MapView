@@ -42,8 +42,7 @@ public class TouchHandler {
                 float dF = curScaleFactor - preScaleFactor;
                 Log.i(TAG, "onScale preScaleFactor : " + preScaleFactor + " curScaleFactor : " + curScaleFactor);
 
-                MatrixUtil.scale(1f + dF, detector.getFocusX(), detector.getFocusY(), mMapView.getTransform());
-                mMapView.refresh();
+                mMapView.scale(1f + dF, detector.getFocusX(), detector.getFocusY());
 
                 preScaleFactor = curScaleFactor;//保存上一次的伸缩值
                 return super.onScale(detector);
