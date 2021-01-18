@@ -18,7 +18,6 @@ public class TouchHandler {
     public TouchHandler(Context context, final MapView mapView) {
         mMapView = mapView;
         mGestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
-            float[] matrixValue = new float[9];
             @Override
             public boolean onDown(MotionEvent e) {
                 return true;
@@ -27,32 +26,7 @@ public class TouchHandler {
             @Override
             public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
                 Log.i(TAG, "onScroll distanceX : " + distanceX + "  distanceY: " + distanceY);
-
-                /**
-                 * author : master hao
-                 */
-                Matrix m = mMapView.getTransform();
-                float w = mapView.getWidth();
-                float h = mapView.getHeight();
-
-                m.postTranslate(-distanceX, -distanceY);
-                m.getValues(matrixValue);
-                if (matrixValue[2] >= w / 2) {
-                    matrixValue[2] = w / 2;
-                }
-                if (matrixValue[2] <= -w / 2) {
-                    matrixValue[2] = -w / 2;
-                }
-                if (matrixValue[5] >= h / 2) {
-                    matrixValue[5] = h / 2;
-                }
-                if (matrixValue[5] <= -h / 2) {
-                    matrixValue[5] = -h / 2;
-                }
-                m.setValues(matrixValue);
-
-//                mMapView.getTransform().postTranslate(-distanceX, -distanceY);
-                mMapView.refresh();
+                mapView.translate(distanceX,distanceY);
                 return true;
             }
         });
