@@ -38,7 +38,13 @@ public class LayerManager {
     private Comparator<BaseLayer> mComparator = new Comparator<BaseLayer>() {
         @Override
         public int compare(BaseLayer layer1, BaseLayer layer2) {
-            return layer1.getLayerLevel() < layer2.getLayerLevel() ? 1 : 0;
+            if (layer1.getLayerLevel() < layer2.getLayerLevel()) {
+                return 1;
+            } else if (layer1.getLayerLevel() > layer2.getLayerLevel()) {
+                return -1;
+            } else {
+                return 0;
+            }
         }
     };
 
@@ -163,7 +169,6 @@ public class LayerManager {
     public void clearLayer() {
         mLayerList.clear();
     }
-
 
 
 }
