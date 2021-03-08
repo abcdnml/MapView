@@ -48,7 +48,7 @@ public class RectangleArea extends QuadrilateralArea {
         this.center.y = (lt.y + rb.y) / 2;
         this.width = (float) MapUtils.distance(lt, rt);
         this.height = (float) MapUtils.distance(lt, lb);
-        this.rotate = MapUtils.getRotateByRect(lt, rt);
+        this.rotate = MapUtils.getRotateByRect(rt, lt);
 
         mMatrix.setRotate(rotate, center.x, center.y);
     }
