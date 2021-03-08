@@ -39,9 +39,9 @@ public class LayerManager {
         @Override
         public int compare(BaseLayer layer1, BaseLayer layer2) {
             if (layer1.getLayerLevel() < layer2.getLayerLevel()) {
-                return 1;
-            } else if (layer1.getLayerLevel() > layer2.getLayerLevel()) {
                 return -1;
+            } else if (layer1.getLayerLevel() > layer2.getLayerLevel()) {
+                return 1;
             } else {
                 return 0;
             }
