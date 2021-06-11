@@ -1,2 +1,2 @@
-include ':app', ':map'
+include ':app', ':map', ':map3d'
 rootProject.name='MapView'
