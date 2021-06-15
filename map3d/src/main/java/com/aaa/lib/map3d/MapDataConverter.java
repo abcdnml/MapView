@@ -1,6 +1,7 @@
 package com.aaa.lib.map3d;
 
 import android.graphics.Color;
+import android.util.Log;
 import android.util.SparseArray;
 
 import com.aaa.lib.map3d.obj.MtlInfo;
@@ -70,6 +71,79 @@ public class MapDataConverter {
             3, 2, 1, 3, 1, 0,//上
             0, 1, 2, 0, 2, 3//下
     };
+
+    /**
+     * 过滤墙内的柱子
+     *
+     * @param width        长
+     * @param height       宽
+     * @param mapData      数据
+     * @param minWallCount 最小相邻墙的数目 ,  小于这个值就当做地板
+     */
+    public static void filterWall(int width, int height, int[] mapData, int minWallCount) {
+        List<Integer> list = new ArrayList<>();
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                if (mapData[i * width + j] == 1) {
+                    list.clear();
+                    int count = getNeighborWall(mapData, width, height, i, j, list);
+                    if (count > minWallCount) {
+                        for (int index : list) {
+                            //将100 和 101 转换成 0(地板)  和 1(墙)
+                            mapData[index] = 101;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < mapData.length; i++) {
+            mapData[i] = mapData[i] % 100;
+        }
+    }
+
+    /**
+     * 计算相邻的墙的数量
+     *
+     * @param mapData
+     * @param w       地图宽
+     * @param h       地图高
+     * @param i       坐标y
+     * @param j       坐标x
+     * @param path    已经遍历过得墙的列表
+     * @return 相邻墙的数量
+     */
+    private static int getNeighborWall(int[] mapData, int w, int h, int i, int j, List<Integer> path) {
+        if (mapData[i * w + j] != 1) {
+            return 0;
+        }
+        path.add(i * w + j);
+        //已经统计过得格子 设置为100
+        mapData[i * w + j] = 100;
+        int increase = 1;
+
+        //前面有格子
+        if (i + 1 < h) {
+            increase += getNeighborWall(mapData, w, h, i + 1, j, path);
+        }
+
+        //后面有格子
+        if (i - 1 >= 0) {
+            increase += getNeighborWall(mapData, w, h, i - 1, j, path);
+        }
+
+        //左面有格子
+        if (j - 1 >= 0) {
+            increase += getNeighborWall(mapData, w, h, i, j - 1, path);
+        }
+
+        //右面有格子
+        if (j + 1 < w) {
+            increase += getNeighborWall(mapData, w, h, i, j + 1, path);
+        }
+
+        return increase;
+    }
 
 
     //数据转换成obj格式

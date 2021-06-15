@@ -4,10 +4,12 @@ import android.content.Context;
 import android.graphics.Color;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 
 import com.aaa.lib.map3d.model.ObjModel;
 import com.aaa.lib.map3d.model.PathModel;
+import com.aaa.lib.map3d.obj.MtlInfo;
 import com.aaa.lib.map3d.obj.Obj3D;
 import com.aaa.lib.map3d.obj.ObjReader;
 import com.aaa.lib.map3d.obj.Path3D;
@@ -57,6 +59,9 @@ public class Map3DSurfaceView extends GLSurfaceView {
 
     public void refreshMap(int width, int height, float unit, int[] mapData) {
         this.unit = unit;
+        //处理墙内的柱子, 如果 相邻的柱子少于30个, 就认为是墙内
+        MapDataConverter.filterWall(width,height,mapData,30);
+
         List<Obj3D> obj3D = MapDataConverter.mapDataToObj3D(width, height, mapData, unit);
         mapModel.setObj3D(obj3D);
 
@@ -90,6 +95,10 @@ public class Map3DSurfaceView extends GLSurfaceView {
         requestRender();
     }
 
+    /**
+     * 设置路径颜色
+     * @param pathColor
+     */
     public void setPathColor(int pathColor) {
         this.pathColor = pathColor;
         requestRender();
