@@ -127,7 +127,7 @@ public class ObjReader {
                         case "mtllib":  //材质
                             InputStream stream;
                             if (isAssets){
-                                stream=context.getAssets().open(parent+tempsa[1]);
+                                stream=context.getAssets().open(parent+tempsa[1].replace("./",""));
                             }else{
                                 stream=new FileInputStream(parent+tempsa[1]);
                             }
