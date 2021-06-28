@@ -10,8 +10,8 @@ import com.aaa.lib.map.MapView;
 public abstract class BaseLayer {
     public static final int LEVEL_DEFAULT = 3;
     public static final int LEVEL_MAP = 0;
-    public static final int LEVEL_AREA = 1;
-    public static final int LEVEL_PATH = 2;
+    public static final int LEVEL_PATH = 1;
+    public static final int LEVEL_AREA = 2;
     public static final int LEVEL_MARKER = 3;
 
     protected int mLayerLevel;
