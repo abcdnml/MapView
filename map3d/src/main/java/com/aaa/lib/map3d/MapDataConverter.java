@@ -489,7 +489,4 @@ public class MapDataConverter {
     public static float calculateModelScale(float realSize, float modelScale) {
         return realSize / modelScale;
     }
-    private void test(){
-        int i=0;
-    }
 }
