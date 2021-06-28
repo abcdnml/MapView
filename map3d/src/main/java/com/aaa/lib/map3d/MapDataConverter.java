@@ -89,7 +89,7 @@ public class MapDataConverter {
                     int count = getNeighborWall(mapData, width, height, i, j, list);
                     if (count > minWallCount) {
                         for (int index : list) {
-                            //将100 和 101 转换成 0(地板)  和 1(墙)
+                            //相邻数超过minWallCount时  就认为是墙 置为101
                             mapData[index] = 101;
                         }
                     }
@@ -97,6 +97,7 @@ public class MapDataConverter {
             }
         }
 
+        //将100 和 101 转换成 0(地板)  和 1(墙)
         for (int i = 0; i < mapData.length; i++) {
             mapData[i] = mapData[i] % 100;
         }
@@ -118,7 +119,7 @@ public class MapDataConverter {
             return 0;
         }
         path.add(i * w + j);
-        //已经统计过得格子 设置为100
+        //已经统计过得格子 设置为100   后面 如果计算出相邻数量大于某个值 就设置成101 ,  再转化成 0 和 1
         mapData[i * w + j] = 100;
         int increase = 1;
 
@@ -405,12 +406,14 @@ public class MapDataConverter {
             }
         }
 
+        //每个面六个点 每个点有 坐标xyz 法向量xyz 纹理坐标xy
         for (int i = 0; i < adjucent.length; i++) {
             //根据adjucent 判断需要添加几个面 有相邻的面不用添加
-            //每个面六个点 每个点有 坐标xyz 法向量xyz 纹理坐标xy
             if (!adjucent[i]) {
+                //依次添加每个面的六个点  六个点从根据是第几个面 从索引数组中取
                 for (int j = 0; j < 6; j++) {
                     int k = i * 6 + j;
+                    //添加
                     v.put(currentCubeVertex[vertexIndex[k] * 3]);
                     v.put(currentCubeVertex[vertexIndex[k] * 3 + 1]);
                     v.put(currentCubeVertex[vertexIndex[k] * 3 + 2]);
