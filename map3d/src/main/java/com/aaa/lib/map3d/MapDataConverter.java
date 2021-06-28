@@ -1,7 +1,6 @@
 package com.aaa.lib.map3d;
 
 import android.graphics.Color;
-import android.util.Log;
 import android.util.SparseArray;
 
 import com.aaa.lib.map3d.obj.MtlInfo;
@@ -489,5 +488,8 @@ public class MapDataConverter {
      */
     public static float calculateModelScale(float realSize, float modelScale) {
         return realSize / modelScale;
+    }
+    private void test(){
+        int i=0;
     }
 }
