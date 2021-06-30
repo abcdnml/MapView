@@ -68,11 +68,7 @@ public class Map3DRender implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         Log.i(TAG, "onSurfaceCreated: ");
-        float bgRed = Color.red(bgColor) / 255f;
-        float bgGreen = Color.green(bgColor) / 255f;
-        float bgBlue = Color.blue(bgColor) / 255f;
-        float bgAlpha = Color.alpha(bgColor) / 255f;
-        GLES30.glClearColor(bgRed, bgGreen, bgBlue, bgAlpha);
+        setBgColor(bgColor);
         GLES30.glEnable(GLES30.GL_DEPTH_TEST);
         GLES30.glEnable(GLES30.GL_CULL_FACE_MODE);
 
@@ -99,7 +95,6 @@ public class Map3DRender implements GLSurfaceView.Renderer {
     @Override
     public void onDrawFrame(GL10 gl) {
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
-
         Log.i(TAG, "onDrawFrame width: ");
         for (Model shape : shapeList) {
             shape.onDraw();
@@ -160,6 +155,13 @@ public class Map3DRender implements GLSurfaceView.Renderer {
         surfaceView.requestRender();
     }
 
-
+    public void setBgColor(int color){
+        this.bgColor=color;
+        float bgRed = Color.red(bgColor) / 255f;
+        float bgGreen = Color.green(bgColor) / 255f;
+        float bgBlue = Color.blue(bgColor) / 255f;
+        float bgAlpha = Color.alpha(bgColor) / 255f;
+        GLES30.glClearColor(bgRed, bgGreen, bgBlue, bgAlpha);
+    }
 
 }
