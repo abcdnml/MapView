@@ -8,6 +8,10 @@ import java.nio.FloatBuffer;
 
 public abstract class Model {
 
+    protected int programId;
+    protected String vertexShaderCode;
+    protected String fragmentShaderCode;
+
     protected static final int FLOAT_SIZE = 4;
     private static final String TAG = Model.class.getSimpleName();
     protected FloatBuffer vertexBuffer;

@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ObjModel extends Model {
-    static int programId;
     //模型放置到地图上时 本身需要做平移缩放旋转
     float scale = 1f;
     float offsetX = 0f;
@@ -39,9 +38,6 @@ public class ObjModel extends Model {
     private int LOCATION_LIGHT_KS;
 
     private int LOCATION_EYE_POS;
-
-    private String vertexShaderCode;
-    private String fragmentShaderCode;
 
     private float[] modelMatrix = new float[16];
     private float[] mProjMatrix = new float[16];

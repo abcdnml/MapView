@@ -8,9 +8,6 @@ import com.aaa.lib.map3d.utils.ShaderUtil;
 
 public class PathModel extends Model {
 
-    static int programId;
-    private String vertexShaderCode;
-    private String fragmentShaderCode;
     private float[] modelMatrix = new float[16];
     private float[] mProjMatrix = new float[16];
     private float[] mVMatrix = new float[16];
