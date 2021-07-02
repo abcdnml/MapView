@@ -2,11 +2,20 @@ package com.aaa.lib.map3d.model;
 
 import android.content.Context;
 import android.opengl.GLES30;
+import android.util.Log;
 
 import com.aaa.lib.map3d.obj.Path3D;
 import com.aaa.lib.map3d.utils.ShaderUtil;
 
 public class PathModel extends Model {
+
+    private int LOCATION_VETEX;
+    private int LOCATION_MAT_COLOR;
+    private int LOCATION_MAT_MODEL;
+    private int LOCATION_MAT_VIEW;
+    private int LOCATION_MAT_PROJ;
+
+    private int[] vao = new int[1];
 
     private float[] modelMatrix = new float[16];
     private float[] mProjMatrix = new float[16];
@@ -36,33 +45,33 @@ public class PathModel extends Model {
         vertexShaderCode = ShaderUtil.loadFromAssetsFile("shader/path.vert", context.getResources());
         fragmentShaderCode = ShaderUtil.loadFromAssetsFile("shader/path.frag", context.getResources());
         programId = createGLProgram(vertexShaderCode, fragmentShaderCode);
-    }
 
+        initLocation();
+        initVAO();
+    }
+    private void initLocation() {
+        LOCATION_VETEX = GLES30.glGetAttribLocation(programId, "aPos");
+        LOCATION_MAT_COLOR = GLES30.glGetUniformLocation(programId, "color");
+        LOCATION_MAT_MODEL = GLES30.glGetUniformLocation(programId, "model");
+        LOCATION_MAT_VIEW = GLES30.glGetUniformLocation(programId, "view");
+        LOCATION_MAT_PROJ = GLES30.glGetUniformLocation(programId, "projection");
+    }
     @Override
     public void onDraw() {
-        if(path3D==null){
+        Log.e(this.getClass().getSimpleName(),"draw Program id "+programId);
+        if (programId == 0) {
+            Log.e(this.getClass().getSimpleName(),"Program id is 0 ,may not init");
             return;
         }
-
         GLES30.glUseProgram(programId);
-        int location = GLES30.glGetAttribLocation(programId, "aPos");
-        GLES30.glEnableVertexAttribArray(location);
-        GLES30.glVertexAttribPointer(location, 3, GLES30.GL_FLOAT, false, 0, path3D.vert);
         GLES30.glLineWidth(4);
+        GLES30.glUniform3fv(LOCATION_MAT_COLOR, 1, path3D.color, 0);
 
-        location = GLES30.glGetUniformLocation(programId, "color");
-        GLES30.glUniform3fv(location, 1, path3D.color, 0);
+        GLES30.glUniformMatrix4fv(LOCATION_MAT_MODEL, 1, false, modelMatrix, 0);
+        GLES30.glUniformMatrix4fv(LOCATION_MAT_VIEW, 1, false, mVMatrix, 0);
+        GLES30.glUniformMatrix4fv(LOCATION_MAT_PROJ, 1, false, mProjMatrix, 0);
 
-        location = GLES30.glGetUniformLocation(programId, "model");
-        GLES30.glUniformMatrix4fv(location, 1, false, modelMatrix, 0);
-        location = GLES30.glGetUniformLocation(programId, "view");
-        GLES30.glUniformMatrix4fv(location, 1, false, mVMatrix, 0);
-        location = GLES30.glGetUniformLocation(programId, "projection");
-        GLES30.glUniformMatrix4fv(location, 1, false, mProjMatrix, 0);
-
-        GLES30.glDrawArrays(GLES30.GL_LINE_STRIP, 0, path3D.vertCount);
-
-        GLES30.glDisableVertexAttribArray(GLES30.glGetAttribLocation(programId, "aPos"));
+        drawWithVAO();
     }
 
     @Override
@@ -72,5 +81,26 @@ public class PathModel extends Model {
 
     public void setPath3D(Path3D path3D) {
         this.path3D = path3D;
+    }
+
+    private void initVAO() {
+        GLES30.glGenVertexArrays(1, vao, 0);
+
+        GLES30.glBindVertexArray(vao[0]);
+        int[] vbo = new int[1];
+        GLES30.glGenBuffers(1, vbo, 0);
+
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, vbo[0]);
+        GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, path3D.vert.capacity() * 4, path3D.vert, GLES30.GL_STATIC_DRAW);
+        GLES30.glVertexAttribPointer(LOCATION_VETEX, 3, GLES30.GL_FLOAT, false, 0, 0);
+        GLES30.glEnableVertexAttribArray(LOCATION_VETEX);
+
+        GLES30.glBindVertexArray(GLES30.GL_NONE);
+    }
+
+    private void drawWithVAO() {
+        GLES30.glBindVertexArray(vao[0]);
+        GLES30.glDrawArrays(GLES30.GL_LINE_STRIP, 0, path3D.vertCount);
+        GLES30.glBindVertexArray(GLES30.GL_NONE);
     }
 }

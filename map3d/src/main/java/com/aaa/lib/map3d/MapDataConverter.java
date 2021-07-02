@@ -200,11 +200,11 @@ public class MapDataConverter {
 
 //        Bitmap bitmap= BitmapFactory.decodeResource(getResources(), R.mipmap.chat);
         MtlInfo mtlInfo = MtlInfo.newBuilder()
-                .Ka(new float[]{0.9f, 0.9f, 0.9f})
-                .Kd(new float[]{0.89300000667572f, 0.93328571319580f, 0.93999999761581f})
-                .Ks(new float[]{0.09019608050585f, 0.10980392247438f, 0.13333334028721f})
+                .Ka(new float[]{1, 1 ,1})
+                .Kd(new float[]{1, 1 ,1})
+                .Ks(new float[]{1f, 1f, 1f})
                 .Ke(new float[]{1f, 1f, 1f})
-                .Ns(1)
+                .Ns(50)
 //                .bitmap(bitmap)
                 .illum(7)
                 .build();
@@ -260,11 +260,11 @@ public class MapDataConverter {
     public static Obj3D genWallObj(int width, int height, int[] data, SparseArray<boolean[]> faces, int faceCount, float unit) {
 //        Bitmap bitmap=BitmapFactory.decodeResource(getResources(),R.mipmap.chat);
         MtlInfo mtlInfo = MtlInfo.newBuilder()
-                .Ka(new float[]{0.9f, 0.9f, 0.9f})
-                .Kd(new float[]{0.89300000667572f, 0.93328571319580f, 0.93999999761581f})
-                .Ks(new float[]{0.09019608050585f, 0.10980392247438f, 0.13333334028721f})
+                .Ka(new float[]{1, 1 ,1})
+                .Kd(new float[]{0.85000002384186f, 0.62814998626709f, 0.35699999332428f})
+                .Ks(new float[]{1f, 1f, 1f})
                 .Ke(new float[]{1f, 1f, 1f})
-                .Ns(1)
+                .Ns(50)
 //                .bitmap(bitmap)
                 .illum(7)
                 .build();
@@ -435,7 +435,6 @@ public class MapDataConverter {
      * @param width
      * @param height
      * @param xy         路径数组
-     * @param resolution 分辨率  与地图统一
      * @param pathColor  rgb值  不包含透明度  例:Color.WHITE
      * @return
      */

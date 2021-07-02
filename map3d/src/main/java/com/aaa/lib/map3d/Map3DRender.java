@@ -43,9 +43,9 @@ public class Map3DRender implements GLSurfaceView.Renderer {
         };
         light =new float[]{
                 -1f, -8f, 0f,       // direction  x y z
-                0.5f, 0.5f, 0.8f,   // ka
-                0.6f, 0.8f, 0.6f,   // kd
-                0.5f, 0.5f, 0.5f,   // ks
+                0.2f, 0.2f, 0.2f,   // ka
+                0.5f, 0.5f, 0.5f,   // kd
+                1.0f, 1.0f, 1.0f,   // ks
         };
     }
 
