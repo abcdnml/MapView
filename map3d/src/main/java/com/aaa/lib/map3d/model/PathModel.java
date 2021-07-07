@@ -25,12 +25,12 @@ public class PathModel extends Model {
 
     public PathModel(Context context) {
         super(context);
-        path3D = null;
+        setPath3D(null);
     }
 
     public PathModel(Context context, Path3D path3D) {
         super(context);
-        this.path3D = path3D;
+        setPath3D(path3D);
     }
 
     @Override
@@ -47,8 +47,8 @@ public class PathModel extends Model {
         programId = createGLProgram(vertexShaderCode, fragmentShaderCode);
 
         initLocation();
-        initVAO();
     }
+
     private void initLocation() {
         LOCATION_VETEX = GLES30.glGetAttribLocation(programId, "aPos");
         LOCATION_MAT_COLOR = GLES30.glGetUniformLocation(programId, "color");
@@ -56,11 +56,15 @@ public class PathModel extends Model {
         LOCATION_MAT_VIEW = GLES30.glGetUniformLocation(programId, "view");
         LOCATION_MAT_PROJ = GLES30.glGetUniformLocation(programId, "projection");
     }
+
     @Override
     public void onDraw() {
-        Log.e(this.getClass().getSimpleName(),"draw Program id "+programId);
+        Log.e(this.getClass().getSimpleName(), "draw Program id " + programId);
         if (programId == 0) {
-            Log.e(this.getClass().getSimpleName(),"Program id is 0 ,may not init");
+            Log.e(this.getClass().getSimpleName(), "Program id is 0 ,may not init");
+            return;
+        }
+        if (path3D == null || path3D.vertCount < 1) {
             return;
         }
         GLES30.glUseProgram(programId);
@@ -81,9 +85,14 @@ public class PathModel extends Model {
 
     public void setPath3D(Path3D path3D) {
         this.path3D = path3D;
+        initVAO();
     }
 
     private void initVAO() {
+        if (path3D == null || path3D.vertCount < 1) {
+            return;
+        }
+
         GLES30.glGenVertexArrays(1, vao, 0);
 
         GLES30.glBindVertexArray(vao[0]);

@@ -179,7 +179,6 @@ public class ObjModel extends Model {
     public void onSurfaceChange(int width, int height) {
         Matrix.invertM(tempmatrix, 0, modelMatrix, 0);
         Matrix.transposeM(normalMatrix, 0, tempmatrix, 0);
-
     }
 
     public void setObj3D(List<Obj3D> obj3DList) {
