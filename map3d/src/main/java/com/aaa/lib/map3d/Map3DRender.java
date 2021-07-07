@@ -43,8 +43,8 @@ public class Map3DRender implements GLSurfaceView.Renderer {
         };
         light =new float[]{
                 -1f, -8f, 0f,       // direction  x y z
-                0.2f, 0.2f, 0.2f,   // ka
-                0.5f, 0.5f, 0.5f,   // kd
+                0.8f, 0.8f, 0.8f,   // ka
+                0.2f, 0.2f, 0.2f,   // kd
                 1.0f, 1.0f, 1.0f,   // ks
         };
     }
@@ -163,5 +163,27 @@ public class Map3DRender implements GLSurfaceView.Renderer {
         float bgAlpha = Color.alpha(bgColor) / 255f;
         GLES30.glClearColor(bgRed, bgGreen, bgBlue, bgAlpha);
     }
+
+    public void move(float distanceX ,float distanceY ,float distanceZ){
+        eye[0]=eye[0]+distanceX;
+        eye[1]=eye[1]+distanceY;
+        eye[2]=eye[2]+distanceZ;
+        Matrix.setLookAtM(mVMatrix, 0, eye[0],eye[1],eye[2],0,0,0,0,0,-1);
+        for (Model shape : shapeList) {
+            shape.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
+        }
+        surfaceView.requestRender();
+    }
+    public void moveTo(float x ,float y ,float z){
+        eye[0]=x;
+        eye[1]=y;
+        eye[2]=z;
+        Matrix.setLookAtM(mVMatrix, 0, eye[0],eye[1],eye[2],0,0,0,0,0,-1);
+        for (Model shape : shapeList) {
+            shape.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
+        }
+        surfaceView.requestRender();
+    }
+
 
 }

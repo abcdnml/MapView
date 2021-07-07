@@ -24,6 +24,7 @@ public class Map3DSurfaceView extends GLSurfaceView {
     private int pathColor = Color.GREEN;
     private ObjModel mapModel;
     private PathModel pathModel;
+    private int[] clipArea = new int[4]; //裁剪区域  左上右下
 
     public Map3DSurfaceView(Context context) {
         super(context);
@@ -62,7 +63,10 @@ public class Map3DSurfaceView extends GLSurfaceView {
         //处理墙内的柱子, 如果 相邻的柱子少于30个, 就认为是墙内
         MapDataConverter.filterWall(width, height, mapData, 30);
 
-        List<Obj3D> obj3D = MapDataConverter.mapDataToObj3D(width, height, mapData, unit);
+        //计算地图可裁剪区域 用于居中
+        MapDataConverter.getClipArea(clipArea, width, height, mapData);
+
+        List<Obj3D> obj3D = MapDataConverter.mapDataToObj3D(width, height, mapData, unit,clipArea);
         mapModel.setObj3D(obj3D);
 
         //TODO 地图更新 需要同事更新路径 和家具
@@ -74,7 +78,7 @@ public class Map3DSurfaceView extends GLSurfaceView {
      * @param pathData 路径数据 格式: [x1,y1,x2,y2,x3,y3.......]
      */
     public void refreshPath(int width, int height, float[] pathData) {
-        Path3D path3D = MapDataConverter.convertPathData(width, height, pathData, unit, pathColor);
+        Path3D path3D = MapDataConverter.convertPathData(clipArea, pathData, unit, pathColor);
         pathModel.setPath3D(path3D);
         requestRender();
     }
@@ -98,7 +102,7 @@ public class Map3DSurfaceView extends GLSurfaceView {
     /**
      * 设置路径颜色
      *
-     * @param pathColor
+     * @param pathColor 路径颜色
      */
     public void setPathColor(int pathColor) {
         this.pathColor = pathColor;
@@ -107,7 +111,8 @@ public class Map3DSurfaceView extends GLSurfaceView {
 
     /**
      * 设置背景颜色
-     * @param color
+     *
+     * @param color 背景颜色
      */
     public void setBgColor(int color) {
         renderer.setBgColor(color);

@@ -72,6 +72,52 @@ public class MapDataConverter {
     };
 
     /**
+     * 计算地图实际探测到的边界 用于居中
+     */
+    public static void getClipArea(int[] clipArea, int width, int height, int[] mapData) {
+        int minX = width;
+        int minY = height;
+        int maxX = 0;
+        int maxY = 0;
+
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                int type = mapData[i * width + j];
+                if (type < 2) {
+                    if (minX > j) {
+                        minX = j;
+                    }
+                    if (minY > i) {
+                        minY = i;
+                    }
+                    if (maxX < j) {
+                        maxX = j;
+                    }
+                    if (maxY < i) {
+                        maxY = i;
+                    }
+                }
+            }
+        }
+
+        /**
+         * 如果有数据 设置可裁剪的范围
+         * 如果没有数据 设置为整个地图大小
+         */
+        if (minX<=maxX&& minY<=maxY){
+            clipArea[0]=minX;
+            clipArea[1]=minY;
+            clipArea[2]=maxX;
+            clipArea[3]=maxY;
+        }else {
+            clipArea[0]=0;
+            clipArea[1]=0;
+            clipArea[2]=width;
+            clipArea[3]=height;
+        }
+    }
+
+    /**
      * 过滤墙内的柱子
      *
      * @param width        长
@@ -147,11 +193,15 @@ public class MapDataConverter {
 
 
     //数据转换成obj格式
-    public static List<Obj3D> mapDataToObj3D(int width, int height, int[] data, float unit) {
+    public static List<Obj3D> mapDataToObj3D(int width, int height, int[] data, float unit,int[] clipArea) {
         int floorFaceCount = 0;
         int wallFaceCount = 0;
         SparseArray<boolean[]> floorFaces = new SparseArray<>();
         SparseArray<boolean[]> wallFaces = new SparseArray<>();
+
+        /**
+         * 这里提前计算面相邻 是因为需要提前算要绘制的面的个数
+         */
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
                 int type = data[i * width + j];
@@ -168,20 +218,15 @@ public class MapDataConverter {
                     int faceCount = isWallAdjucency(data, width, height, i, j, adjucent);
                     wallFaceCount += faceCount;
                     wallFaces.put(i * width + j, adjucent);
-                } else if (type == 2) {
-                    //2 墙外
-                } else {
-
                 }
             }
         }
-        //UNIT_SIZE 现在默认是resolution * 2  resolution默认为0.05  也就是地板方块长宽高0.1m
-
+        //因为地图边缘有很多空白, 直接将坐标系移到地图中心点不合适 , 应该移到裁剪区域的中心点
         List<Obj3D> obj3Ds = new ArrayList<>();
-        Obj3D floor = genFloorObj(width, height, data, floorFaces, floorFaceCount, unit);
+        Obj3D floor = genFloorObj(width, height, data, floorFaces, floorFaceCount, unit, (clipArea[0] + clipArea[2]) / 2, (clipArea[1] + clipArea[3]) / 2);
         obj3Ds.add(floor);
 
-        Obj3D wall = genWallObj(width, height, data, wallFaces, wallFaceCount, unit);
+        Obj3D wall = genWallObj(width, height, data, wallFaces, wallFaceCount, unit, (clipArea[0] + clipArea[2]) / 2, (clipArea[1] + clipArea[3]) / 2);
         obj3Ds.add(wall);
         return obj3Ds;
     }
@@ -196,12 +241,12 @@ public class MapDataConverter {
      * @param faceCount 绘制面的个数
      * @return Obj3D
      */
-    public static Obj3D genFloorObj(int width, int height, int[] data, SparseArray<boolean[]> faces, int faceCount, float unit) {
+    public static Obj3D genFloorObj(int width, int height, int[] data, SparseArray<boolean[]> faces, int faceCount, float unit, int mapOffsetX, int mapOffsetY) {
 
 //        Bitmap bitmap= BitmapFactory.decodeResource(getResources(), R.mipmap.chat);
         MtlInfo mtlInfo = MtlInfo.newBuilder()
-                .Ka(new float[]{1, 1 ,1})
-                .Kd(new float[]{1, 1 ,1})
+                .Ka(new float[]{1, 1, 1})
+                .Kd(new float[]{1, 1, 1})
                 .Ks(new float[]{1f, 1f, 1f})
                 .Ke(new float[]{1f, 1f, 1f})
                 .Ns(50)
@@ -222,9 +267,9 @@ public class MapDataConverter {
                 int type = data[i * width + j];
                 if (type == 0) {
                     //0 墙内
-                    float offsetX = j * unit - width * unit / 2;
+                    float offsetX = j * unit - mapOffsetX * unit;
                     float offsetY = rectY / 2;
-                    float offsetZ = i * unit - height * unit / 2;
+                    float offsetZ = i * unit - mapOffsetY * unit;
                     boolean[] adjucent = faces.get(i * width + j);
                     addCuboidVertex(vertex, vertexTexture, vertexNormal, rectX / 2, rectY / 2, rectZ / 2, offsetX, offsetY, offsetZ, adjucent);
                 }
@@ -257,11 +302,11 @@ public class MapDataConverter {
      * @return Obj3D
      * 当前墙和地板只有高度不同,  后期可能会有其他变化
      */
-    public static Obj3D genWallObj(int width, int height, int[] data, SparseArray<boolean[]> faces, int faceCount, float unit) {
+    public static Obj3D genWallObj(int width, int height, int[] data, SparseArray<boolean[]> faces, int faceCount, float unit, int mapOffsetX, int mapOffsetY) {
 //        Bitmap bitmap=BitmapFactory.decodeResource(getResources(),R.mipmap.chat);
         MtlInfo mtlInfo = MtlInfo.newBuilder()
-                .Ka(new float[]{1, 1 ,1})
-                .Kd(new float[]{0.85000002384186f, 0.62814998626709f, 0.35699999332428f})
+                .Ka(new float[]{1, 1, 1})
+                .Kd(new float[]{1, 1, 1})
                 .Ks(new float[]{1f, 1f, 1f})
                 .Ke(new float[]{1f, 1f, 1f})
                 .Ns(50)
@@ -274,7 +319,7 @@ public class MapDataConverter {
 
 
         float rectX = unit;
-        float rectY = 15 * unit;
+        float rectY = 20 * unit;
         float rectZ = unit;
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
@@ -282,9 +327,9 @@ public class MapDataConverter {
                 //计算立方体6个面有无相邻
                 if (type == 1) {
                     //1 墙
-                    float offsetX = j * unit - width * unit / 2;    //x 轴偏移 地图中心点为(width/2, height/2) 要将地图中心移动到 (0,0) 所以减去半个地图大小
+                    float offsetX = j * unit - mapOffsetX * unit ;    //x 轴偏移 去除空数据后 地图中心点为(mapOffsetX, mapOffsetY) 要将地图中心移动到 (0,0) 所以减去这个向量
                     float offsetY = rectY / 2;                      //y 轴偏移  默认中心点在0, 要往上移 边长的一半,
-                    float offsetZ = i * unit - height * unit / 2;   //z 轴偏移  地图中心点为(width/2, height/2) 要将地图中心移动到 (0,0) 所以减去半个地图大小
+                    float offsetZ = i * unit - mapOffsetY * unit ;   //z 轴偏移  地图中心点为(width/2, height/2) 要将地图中心移动到 (0,0) 所以减去半个地图大小
                     boolean[] adjucent = faces.get(i * width + j);
 
                     addCuboidVertex(vertex, vertexTexture, vertexNormal, rectX / 2, rectY / 2, rectZ / 2, offsetX, offsetY, offsetZ, adjucent);
@@ -432,20 +477,18 @@ public class MapDataConverter {
     /**
      * 生成路径的数据
      *
-     * @param width
-     * @param height
-     * @param xy         路径数组
-     * @param pathColor  rgb值  不包含透明度  例:Color.WHITE
+     * @param xy        路径数组
+     * @param pathColor rgb值  不包含透明度  例:Color.WHITE
      * @return
      */
-    public static Path3D convertPathData(int width, int height, float[] xy, float unit, int pathColor) {
+    public static Path3D convertPathData(int[] clipArea, float[] xy, float unit, int pathColor) {
 
         //buffer大小 = 路径点的xy个数 +  一个z轴坐标( *3/2 ) * 每个维度字节数 (float 4)
         FloatBuffer vertex = ByteBuffer.allocateDirect(xy.length / 2 * 3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
 
         for (int i = 0; i < xy.length / 2; i++) {
-            float x = xy[i * 2] * unit - width * unit / 2;         //将地图制定点 缩放平移到3d地图的指定位置
-            float z = xy[i * 2 + 1] * unit - height * unit / 2;
+            float x = xy[i * 2] * unit - (clipArea[0]+clipArea[2])/2 * unit ;         //将地图制定点 缩放平移到3d地图的指定位置
+            float z = xy[i * 2 + 1] * unit - (clipArea[1]+clipArea[3])/2 * unit;
             float y = unit * 3 / 2;
             vertex.put(x);
             vertex.put(y);
