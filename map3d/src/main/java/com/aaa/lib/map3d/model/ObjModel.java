@@ -3,15 +3,19 @@ package com.aaa.lib.map3d.model;
 import android.content.Context;
 import android.opengl.GLES30;
 import android.opengl.Matrix;
+import android.util.Log;
 import android.util.SparseArray;
 
 import com.aaa.lib.map3d.obj.Obj3D;
 import com.aaa.lib.map3d.utils.ShaderUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ObjModel extends Model {
+    int[] vaos;
+    int[] vbos;
     //模型放置到地图上时 本身需要做平移缩放旋转
     private float scale = 1f;
     private float offsetX = 0f;
@@ -20,7 +24,6 @@ public class ObjModel extends Model {
     private float rotateX = 0f;
     private float rotateY = 0f;
     private float rotateZ = 0f;
-
     private int LOCATION_VETEX;
     private int LOCATION_NORMAL;
     private int LOCATION_TEXTURE;
@@ -32,14 +35,11 @@ public class ObjModel extends Model {
     private int LOCATION_MTL_KD;
     private int LOCATION_MTL_KS;
     private int LOCATION_MTL_NS;
-
     private int LOCATION_LIGHT_DIR;
     private int LOCATION_LIGHT_KA;
     private int LOCATION_LIGHT_KD;
     private int LOCATION_LIGHT_KS;
-
     private int LOCATION_EYE_POS;
-
     private float[] modelMatrix = new float[16];
     private float[] mProjMatrix = new float[16];
     private float[] mVMatrix = new float[16];
@@ -47,18 +47,16 @@ public class ObjModel extends Model {
     private float[] tempmatrix = new float[16];
     private float[] eye = new float[9];
     private float[] light = new float[12];
-
     private SparseArray<Obj3D> objVaoArray = new SparseArray<>();
-    private List<Obj3D> obj3Ds;
+    private List<Obj3D> obj3DS;
 
     public ObjModel(Context context) {
-        super(context);
-        this.obj3Ds = new ArrayList<>();
+        this(context, new ArrayList<Obj3D>());
     }
 
-    public ObjModel(Context context, List<Obj3D> obj3Ds) {
+    public ObjModel(Context context, List<Obj3D> obj3DS) {
         super(context);
-        this.obj3Ds = obj3Ds;
+        this.obj3DS = obj3DS;
     }
 
     public void setScale(float scale) {
@@ -83,8 +81,8 @@ public class ObjModel extends Model {
         System.arraycopy(vMatrix, 0, mVMatrix, 0, vMatrix.length);
         System.arraycopy(pMatrix, 0, mProjMatrix, 0, pMatrix.length);
 
-        Matrix.translateM(modelMatrix, 0, offsetX, offsetY, offsetZ);
 
+        Matrix.translateM(modelMatrix, 0, offsetX, offsetY, offsetZ);
         Matrix.scaleM(modelMatrix, 0, scale, scale, scale);
 
         //旋转要放到平移后面  旋转的中心点就在000  否则 ....
@@ -112,11 +110,13 @@ public class ObjModel extends Model {
         vertexShaderCode = ShaderUtil.loadFromAssetsFile("shader/obj_mtl.vert", context.getResources());
         fragmentShaderCode = ShaderUtil.loadFromAssetsFile("shader/obj_mtl.frag", context.getResources());
         programId = createGLProgram(vertexShaderCode, fragmentShaderCode);
-
+        Log.i("onSurfaceCreate map ", " thread: " + Thread.currentThread().getName());
         initLocation();
 
-        setObj3D(obj3Ds);
-
+        //如果初始化时设置了
+        if (obj3DS != null && obj3DS.size() > 0) {
+            setObj3D(obj3DS);
+        }
     }
 
 
@@ -146,6 +146,7 @@ public class ObjModel extends Model {
 
     @Override
     public void onDraw() {
+        Log.e(this.getClass().getSimpleName(), "draw obj Program id " + programId);
         GLES30.glUseProgram(programId);
         //设置平行光源方向
         GLES30.glUniform3fv(LOCATION_LIGHT_DIR, 1, light, 0);
@@ -161,6 +162,7 @@ public class ObjModel extends Model {
         GLES30.glUniformMatrix4fv(LOCATION_MAT_PROJ, 1, false, mProjMatrix, 0);
         GLES30.glUniformMatrix4fv(LOCATION_MAT_NORMAL, 1, false, normalMatrix, 0);
 
+        Log.i("draw obj ", "objVaoArray.size " + objVaoArray.size());
         for (int i = 0; i < objVaoArray.size(); i++) {
             int vao = objVaoArray.keyAt(i);
             Obj3D obj3D = objVaoArray.get(vao);
@@ -182,45 +184,56 @@ public class ObjModel extends Model {
     }
 
     public void setObj3D(List<Obj3D> obj3DList) {
-        if (obj3Ds == null) {
-            this.obj3Ds = new ArrayList<>();
-            objVaoArray.clear();
-        } else {
-            this.obj3Ds = obj3DList;
-            objVaoArray.clear();
-            int[] vao = new int[obj3DList.size()];
-
-            GLES30.glGenVertexArrays(obj3DList.size(), vao, 0);
+        clearVAO();
+        objVaoArray.clear();
+        this.obj3DS=obj3DList;
+        if (obj3DList == null || obj3DList.size() == 0) {
+            return;
+        }
+        if (programId != 0) {
+            vaos = new int[obj3DList.size()];
+            vbos = new int[vaos.length * 3];
+            GLES30.glGenVertexArrays(vaos.length, vaos, 0);
+            GLES30.glGenBuffers(vbos.length, vbos, 0);
+            Log.i("set obj  ", "vao :" + Arrays.toString(vaos));
+            Log.i("set obj  ", "vbo :" + Arrays.toString(vbos));
             for (int i = 0; i < obj3DList.size(); i++) {
-                objVaoArray.put(vao[i], obj3DList.get(i));
-                initVAO(vao[i], obj3DList.get(i));
+                objVaoArray.put(vaos[i], obj3DList.get(i));
+                initVAO(i, vaos[i], obj3DList.get(i));
             }
         }
     }
 
-    private void initVAO(int vao, Obj3D obj3D) {
-        int[] vbo = new int[3];
-        GLES30.glGenBuffers(3, vbo, 0);
+    public void clearVAO() {
+        if (vbos != null) {
+            GLES30.glDeleteBuffers(vbos.length, vbos, 0);
+        }
 
+        if (vaos != null) {
+            GLES30.glDeleteVertexArrays(objVaoArray.size(), vaos, 0);
+        }
+
+    }
+
+    private void initVAO(int i, int vao, Obj3D obj3D) {
         GLES30.glBindVertexArray(vao);
 
-        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, vbo[0]);
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, vbos[i * 3]);
         GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, obj3D.vert.capacity() * 4, obj3D.vert, GLES30.GL_STATIC_DRAW);
         GLES30.glVertexAttribPointer(LOCATION_VETEX, 3, GLES30.GL_FLOAT, false, 0, 0);
         GLES30.glEnableVertexAttribArray(LOCATION_VETEX);
 
-        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, vbo[1]);
+        GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, vbos[i * 3 + 1]);
         GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, obj3D.vertNorl.capacity() * 4, obj3D.vertNorl, GLES30.GL_STATIC_DRAW);
         GLES30.glVertexAttribPointer(LOCATION_NORMAL, 3, GLES30.GL_FLOAT, false, 0, 0);
         GLES30.glEnableVertexAttribArray(LOCATION_NORMAL);
 
         if (obj3D.vertTexture != null) {
-            GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, vbo[2]);
+            GLES30.glBindBuffer(GLES30.GL_ELEMENT_ARRAY_BUFFER, vbos[i * 3 + 2]);
             GLES30.glBufferData(GLES30.GL_ELEMENT_ARRAY_BUFFER, obj3D.vertTexture.capacity() * 4, obj3D.vertTexture, GLES30.GL_STATIC_DRAW);
             GLES30.glEnableVertexAttribArray(LOCATION_TEXTURE);
             GLES30.glVertexAttribPointer(LOCATION_TEXTURE, 2, GLES30.GL_FLOAT, false, 0, 0);
         }
-
         GLES30.glBindVertexArray(GLES30.GL_NONE);
     }
 

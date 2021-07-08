@@ -7,6 +7,8 @@ import android.util.Log;
 import com.aaa.lib.map3d.obj.Path3D;
 import com.aaa.lib.map3d.utils.ShaderUtil;
 
+import java.util.Arrays;
+
 public class PathModel extends Model {
 
     private int LOCATION_VETEX;
@@ -16,6 +18,7 @@ public class PathModel extends Model {
     private int LOCATION_MAT_PROJ;
 
     private int[] vao = new int[1];
+    private int[] vbo = new int[1];
 
     private float[] modelMatrix = new float[16];
     private float[] mProjMatrix = new float[16];
@@ -24,8 +27,7 @@ public class PathModel extends Model {
     private Path3D path3D;
 
     public PathModel(Context context) {
-        super(context);
-        setPath3D(null);
+        this(context,null);
     }
 
     public PathModel(Context context, Path3D path3D) {
@@ -47,6 +49,8 @@ public class PathModel extends Model {
         programId = createGLProgram(vertexShaderCode, fragmentShaderCode);
 
         initLocation();
+
+        setPath3D(path3D);
     }
 
     private void initLocation() {
@@ -59,9 +63,8 @@ public class PathModel extends Model {
 
     @Override
     public void onDraw() {
-        Log.e(this.getClass().getSimpleName(), "draw Program id " + programId);
+        Log.e(this.getClass().getSimpleName(), "draw path Program id " + programId);
         if (programId == 0) {
-            Log.e(this.getClass().getSimpleName(), "Program id is 0 ,may not init");
             return;
         }
         if (path3D == null || path3D.vertCount < 1) {
@@ -84,21 +87,25 @@ public class PathModel extends Model {
     }
 
     public void setPath3D(Path3D path3D) {
+        clearVAO();
         this.path3D = path3D;
-        initVAO();
-    }
-
-    private void initVAO() {
         if (path3D == null || path3D.vertCount < 1) {
             return;
         }
 
+        initVAO();
+    }
+    private void clearVAO(){
+        GLES30.glDeleteBuffers(vbo.length,vbo,0);
+        GLES30.glDeleteVertexArrays(vao.length, vao, 0);
+    }
+
+    private void initVAO() {
         GLES30.glGenVertexArrays(1, vao, 0);
-
+        Log.i("set path obj  ", "vao :" + Arrays.toString(vao));
         GLES30.glBindVertexArray(vao[0]);
-        int[] vbo = new int[1];
-        GLES30.glGenBuffers(1, vbo, 0);
 
+        GLES30.glGenBuffers(1, vbo, 0);
         GLES30.glBindBuffer(GLES30.GL_ARRAY_BUFFER, vbo[0]);
         GLES30.glBufferData(GLES30.GL_ARRAY_BUFFER, path3D.vert.capacity() * 4, path3D.vert, GLES30.GL_STATIC_DRAW);
         GLES30.glVertexAttribPointer(LOCATION_VETEX, 3, GLES30.GL_FLOAT, false, 0, 0);

@@ -1,6 +1,7 @@
 package com.aaa.lib.map3d;
 
 import android.graphics.Color;
+import android.util.Log;
 import android.util.SparseArray;
 
 import com.aaa.lib.map3d.obj.MtlInfo;
@@ -11,6 +12,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MapDataConverter {
@@ -104,17 +106,19 @@ public class MapDataConverter {
          * 如果有数据 设置可裁剪的范围
          * 如果没有数据 设置为整个地图大小
          */
-        if (minX<=maxX&& minY<=maxY){
-            clipArea[0]=minX;
-            clipArea[1]=minY;
-            clipArea[2]=maxX;
-            clipArea[3]=maxY;
-        }else {
-            clipArea[0]=0;
-            clipArea[1]=0;
-            clipArea[2]=width;
-            clipArea[3]=height;
+        if (minX <= maxX && minY <= maxY) {
+            clipArea[0] = minX;
+            clipArea[1] = minY;
+            clipArea[2] = maxX;
+            clipArea[3] = maxY;
+        } else {
+            clipArea[0] = 0;
+            clipArea[1] = 0;
+            clipArea[2] = width;
+            clipArea[3] = height;
         }
+
+        Log.i("getClipArea", Arrays.toString(clipArea));
     }
 
     /**
@@ -193,7 +197,7 @@ public class MapDataConverter {
 
 
     //数据转换成obj格式
-    public static List<Obj3D> mapDataToObj3D(int width, int height, int[] data, float unit,int[] clipArea) {
+    public static List<Obj3D> mapDataToObj3D(int width, int height, int[] data, float unit, int offsetX, int offsetY) {
         int floorFaceCount = 0;
         int wallFaceCount = 0;
         SparseArray<boolean[]> floorFaces = new SparseArray<>();
@@ -223,10 +227,10 @@ public class MapDataConverter {
         }
         //因为地图边缘有很多空白, 直接将坐标系移到地图中心点不合适 , 应该移到裁剪区域的中心点
         List<Obj3D> obj3Ds = new ArrayList<>();
-        Obj3D floor = genFloorObj(width, height, data, floorFaces, floorFaceCount, unit, (clipArea[0] + clipArea[2]) / 2, (clipArea[1] + clipArea[3]) / 2);
+        Obj3D floor = genFloorObj(width, height, data, floorFaces, floorFaceCount, unit, offsetX, offsetY);
         obj3Ds.add(floor);
 
-        Obj3D wall = genWallObj(width, height, data, wallFaces, wallFaceCount, unit, (clipArea[0] + clipArea[2]) / 2, (clipArea[1] + clipArea[3]) / 2);
+        Obj3D wall = genWallObj(width, height, data, wallFaces, wallFaceCount, unit, offsetX, offsetY);
         obj3Ds.add(wall);
         return obj3Ds;
     }
@@ -254,14 +258,15 @@ public class MapDataConverter {
                 .illum(7)
                 .build();
 
+        faceCount += 6;
         //Buffer大小等于: 面数* 每个面2个三角形* 每个三角形3个顶点* 每个顶点3个维度(xyz) * 每个维度四字节(float) : faceCount* 2*3*3*4
         FloatBuffer vertex = ByteBuffer.allocateDirect(faceCount * 2 * 3 * 3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
         FloatBuffer vertexNormal = ByteBuffer.allocateDirect(faceCount * 2 * 3 * 3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
         FloatBuffer vertexTexture = ByteBuffer.allocateDirect(faceCount * 2 * 3 * 2 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
-
         float rectX = unit;
         float rectY = unit;
         float rectZ = unit;
+        Log.i("gen floor ", " mapOffsetX x " + mapOffsetX + " z :" + mapOffsetY);
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
                 int type = data[i * width + j];
@@ -275,7 +280,7 @@ public class MapDataConverter {
                 }
             }
         }
-        //genFloor(vertex, vertexTexture, vertexNormal, width, height, resolution); //直接画宽高大小的地板
+        genFloor(vertex, vertexTexture, vertexNormal, width, height, unit, mapOffsetX, mapOffsetY); //直接画宽高大小的地板
 
         vertex.flip();
         vertexNormal.flip();
@@ -327,9 +332,9 @@ public class MapDataConverter {
                 //计算立方体6个面有无相邻
                 if (type == 1) {
                     //1 墙
-                    float offsetX = j * unit - mapOffsetX * unit ;    //x 轴偏移 去除空数据后 地图中心点为(mapOffsetX, mapOffsetY) 要将地图中心移动到 (0,0) 所以减去这个向量
+                    float offsetX = j * unit - mapOffsetX * unit;    //x 轴偏移 去除空数据后 地图中心点为(mapOffsetX, mapOffsetY) 要将地图中心移动到 (0,0) 所以减去这个向量
                     float offsetY = rectY / 2;                      //y 轴偏移  默认中心点在0, 要往上移 边长的一半,
-                    float offsetZ = i * unit - mapOffsetY * unit ;   //z 轴偏移  地图中心点为(width/2, height/2) 要将地图中心移动到 (0,0) 所以减去半个地图大小
+                    float offsetZ = i * unit - mapOffsetY * unit;   //z 轴偏移  地图中心点为(width/2, height/2) 要将地图中心移动到 (0,0) 所以减去半个地图大小
                     boolean[] adjucent = faces.get(i * width + j);
 
                     addCuboidVertex(vertex, vertexTexture, vertexNormal, rectX / 2, rectY / 2, rectZ / 2, offsetX, offsetY, offsetZ, adjucent);
@@ -481,14 +486,17 @@ public class MapDataConverter {
      * @param pathColor rgb值  不包含透明度  例:Color.WHITE
      * @return
      */
-    public static Path3D convertPathData(int[] clipArea, float[] xy, float unit, int pathColor) {
+    public static Path3D convertPathData(float[] xy, float unit, int pathColor, int offsetX, int offsetY) {
+        if (xy == null) {
+            return null;
+        }
 
         //buffer大小 = 路径点的xy个数 +  一个z轴坐标( *3/2 ) * 每个维度字节数 (float 4)
         FloatBuffer vertex = ByteBuffer.allocateDirect(xy.length / 2 * 3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
 
         for (int i = 0; i < xy.length / 2; i++) {
-            float x = xy[i * 2] * unit - (clipArea[0]+clipArea[2])/2 * unit ;         //将地图制定点 缩放平移到3d地图的指定位置
-            float z = xy[i * 2 + 1] * unit - (clipArea[1]+clipArea[3])/2 * unit;
+            float x = xy[i * 2] * unit - offsetX * unit;         //将地图制定点 缩放平移到3d地图的指定位置
+            float z = xy[i * 2 + 1] * unit - offsetY * unit;
             float y = unit * 3 / 2;
             vertex.put(x);
             vertex.put(y);
@@ -508,14 +516,14 @@ public class MapDataConverter {
     /**
      * 只用一个长方体绘制地面, 不考虑清扫
      */
-    private static void genFloor(FloatBuffer v, FloatBuffer vt, FloatBuffer vn, int width, int height, float unit) {
-        float rectX = width * unit;
-        float rectY = unit;
-        float rectZ = height * unit;
+    private static void genFloor(FloatBuffer v, FloatBuffer vt, FloatBuffer vn, int width, int height, float unit, int mapOffsetX, int mapOffsetY) {
+        float rectX = width * unit / 2;
+        float rectY = unit / 2;
+        float rectZ = height * unit / 2;
 
-        float offsetX = -width * unit / 2;
+        float offsetX = width * unit / 2 - mapOffsetX * unit;
         float offsetY = unit / 2;
-        float offsetZ = -height * unit / 2;
+        float offsetZ = height * unit / 2 - mapOffsetY * unit;
         boolean[] adjucent = new boolean[]{false, false, false, false, false, false};
         addCuboidVertex(v, vt, vn, rectX, rectY, rectZ, offsetX, offsetY, offsetZ, adjucent);
     }

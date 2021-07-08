@@ -21,7 +21,7 @@ public class Map3DRender implements GLSurfaceView.Renderer {
     final float TOUCH_SCALE_AC = 5;
     private int bgColor;
     private GLSurfaceView surfaceView;
-    private volatile List<Model> shapeList;
+    private volatile List<Model> modelList;
     private float[] modelMatrix = Model.getOriginalMatrix();
     private float[] mProjMatrix = new float[16];
     private float[] mVMatrix = new float[16];
@@ -37,7 +37,7 @@ public class Map3DRender implements GLSurfaceView.Renderer {
         init();
     }
     private void init(){
-        shapeList = new ArrayList<>();
+        modelList = new ArrayList<>();
         eye=new float[]{
                 0, 9, 0 //eye x y z
         };
@@ -49,20 +49,20 @@ public class Map3DRender implements GLSurfaceView.Renderer {
         };
     }
 
-    public void addShape(final Model shape) {
-        Log.i(TAG, "addShape");
-        shapeList.add(shape);
-        shape.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
-        shape.setEye(eye);
-        shape.setLight(light);
+    public void addModel(final Model model) {
+        Log.i(TAG, "addModel");
+        modelList.add(model);
+        model.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
+        model.setEye(eye);
+        model.setLight(light);
     }
 
     public void remove(Model shape) {
-        shapeList.remove(shape);
+        modelList.remove(shape);
     }
 
     public void clear() {
-        shapeList.clear();
+        modelList.clear();
     }
 
     @Override
@@ -72,7 +72,7 @@ public class Map3DRender implements GLSurfaceView.Renderer {
         GLES30.glEnable(GLES30.GL_DEPTH_TEST);
         GLES30.glEnable(GLES30.GL_CULL_FACE_MODE);
 
-        for (Model shape : shapeList) {
+        for (Model shape : modelList) {
             shape.onSurfaceCreate(surfaceView.getContext());
         }
     }
@@ -85,19 +85,19 @@ public class Map3DRender implements GLSurfaceView.Renderer {
         float aspectRatio = (width + 0f) / height;
         //眼睛坐标和法向量一定要算好 要不然 看到别的地方去了
         Matrix.setLookAtM(mVMatrix, 0, eye[0],eye[1],eye[2],0,0,0,0,0,-1);
-        Matrix.perspectiveM(mProjMatrix, 0, 90, aspectRatio, 0.1f, 100);
-        for (Model shape : shapeList) {
-            shape.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
-            shape.onSurfaceChange(width, height);
+        Matrix.perspectiveM(mProjMatrix, 0, 72, aspectRatio, 0.1f, 100);
+        for (Model model : modelList) {
+            model.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
+            model.onSurfaceChange(width, height);
         }
     }
 
     @Override
     public void onDrawFrame(GL10 gl) {
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
-        Log.i(TAG, "onDrawFrame width: ");
-        for (Model shape : shapeList) {
-            shape.onDraw();
+        Log.i(TAG, "onDrawFrame width: " + modelList.size());
+        for (Model model : modelList) {
+            model.onDraw();
         }
     }
 
@@ -120,8 +120,8 @@ public class Map3DRender implements GLSurfaceView.Renderer {
         Matrix.rotateM(modelMatrix, 0, -rotateX / TOUCH_SCALE_AC, 0, 1, 0);
         Matrix.scaleM(modelMatrix, 0, scale, scale, scale);
 
-        for (Model shape : shapeList) {
-            shape.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
+        for (Model model : modelList) {
+            model.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
         }
         surfaceView.requestRender();
     }
@@ -130,8 +130,8 @@ public class Map3DRender implements GLSurfaceView.Renderer {
         //这样写可以造成一个缩放回弹的效果 回弹效果要在scaleEnd时重新设置回边界大小
         Matrix.scaleM(modelMatrix, 0, s, s, s);
         scale = scale * s;
-        for (Model shape : shapeList) {
-            shape.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
+        for (Model model : modelList) {
+            model.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
         }
         surfaceView.requestRender();
     }
@@ -149,8 +149,8 @@ public class Map3DRender implements GLSurfaceView.Renderer {
         }
         Matrix.scaleM(modelMatrix, 0, s, s, s);
 
-        for (Model shape : shapeList) {
-            shape.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
+        for (Model model : modelList) {
+            model.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
         }
         surfaceView.requestRender();
     }
@@ -169,8 +169,8 @@ public class Map3DRender implements GLSurfaceView.Renderer {
         eye[1]=eye[1]+distanceY;
         eye[2]=eye[2]+distanceZ;
         Matrix.setLookAtM(mVMatrix, 0, eye[0],eye[1],eye[2],0,0,0,0,0,-1);
-        for (Model shape : shapeList) {
-            shape.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
+        for (Model model : modelList) {
+            model.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
         }
         surfaceView.requestRender();
     }
@@ -179,8 +179,8 @@ public class Map3DRender implements GLSurfaceView.Renderer {
         eye[1]=y;
         eye[2]=z;
         Matrix.setLookAtM(mVMatrix, 0, eye[0],eye[1],eye[2],0,0,0,0,0,-1);
-        for (Model shape : shapeList) {
-            shape.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
+        for (Model model : modelList) {
+            model.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
         }
         surfaceView.requestRender();
     }

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.opengl.GLSurfaceView;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 
 import com.aaa.lib.map3d.model.ObjModel;
@@ -47,9 +48,9 @@ public class Map3DSurfaceView extends GLSurfaceView {
         touchHandler = new TouchHandler(this);
 
         mapModel = new ObjModel(getContext());
-        renderer.addShape(mapModel);
+        renderer.addModel(mapModel);
         pathModel = new PathModel(getContext());
-        renderer.addShape(pathModel);
+        renderer.addModel(pathModel);
     }
 
     @Override
@@ -65,22 +66,39 @@ public class Map3DSurfaceView extends GLSurfaceView {
 
         //计算地图可裁剪区域 用于居中
         MapDataConverter.getClipArea(clipArea, width, height, mapData);
+        int offsetX=(clipArea[0] + clipArea[2]) / 2;
+        int offsetY=(clipArea[1] + clipArea[3]) / 2;
+        final List<Obj3D> obj3D = MapDataConverter.mapDataToObj3D(width, height, mapData, unit,offsetX,offsetY);
 
-        List<Obj3D> obj3D = MapDataConverter.mapDataToObj3D(width, height, mapData, unit,clipArea);
-        mapModel.setObj3D(obj3D);
+        queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                mapModel.setObj3D(obj3D);
+                requestRender();
+            }
+        });
+
 
         //TODO 地图更新 需要同事更新路径 和家具
-        requestRender();
+//        requestRender();
     }
 
     /**
      * @param width    height 地图宽高
      * @param pathData 路径数据 格式: [x1,y1,x2,y2,x3,y3.......]
      */
-    public void refreshPath(int width, int height, float[] pathData) {
-        Path3D path3D = MapDataConverter.convertPathData(clipArea, pathData, unit, pathColor);
-        pathModel.setPath3D(path3D);
-        requestRender();
+    public void refreshPath(float[] pathData) {
+        int offsetX=(clipArea[0] + clipArea[2]) / 2;
+        int offsetY=(clipArea[1] + clipArea[3]) / 2;
+        final Path3D path3D = MapDataConverter.convertPathData(pathData, unit, pathColor,offsetX,offsetY);
+
+        queueEvent(new Runnable() {
+            @Override
+            public void run() {
+                pathModel.setPath3D(path3D);
+                requestRender();
+            }
+        });
     }
 
     /**
@@ -89,14 +107,19 @@ public class Map3DSurfaceView extends GLSurfaceView {
      * @param scale   如果模型大小单位为cm 且与实际大小一致 则 scale==0.01
      * @param rotate  家具只按y轴旋转
      */
-    public void add3DModel(String objPath, float offsetX, float offsetY, float scale, float rotate) {
+    public ObjModel add3DModel(String objPath, float offsetX, float offsetY, float scale, float rotate) {
+        int mapOffsetX=(clipArea[0] + clipArea[2]) / 2;
+        int mapOffsetY=(clipArea[1] + clipArea[3]) / 2;
+
         List<Obj3D> multiObj2 = ObjReader.readMultiObj(getContext(), objPath);
         ObjModel objModel = new ObjModel(getContext(), multiObj2);
-        objModel.setOffset(offsetX * unit, 1f * unit, offsetY * unit);
+        objModel.setOffset((offsetX -mapOffsetX) * unit, 1f * unit, (offsetY-mapOffsetY) * unit );
+        Log.i("add3DModel : ","offset x: "+(offsetX -(clipArea[0]+clipArea[2])/2) * unit +"  offset Y: "+(offsetY-(clipArea[1]+clipArea[3])/2) * unit);
         objModel.setRotate(0, rotate, 0);
         objModel.setScale(scale);
-        renderer.addShape(objModel);
+        renderer.addModel(objModel);
         requestRender();
+        return objModel;
     }
 
     /**
