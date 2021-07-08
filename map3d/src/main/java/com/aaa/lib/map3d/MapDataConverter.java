@@ -258,7 +258,6 @@ public class MapDataConverter {
                 .illum(7)
                 .build();
 
-        faceCount += 6;
         //Buffer大小等于: 面数* 每个面2个三角形* 每个三角形3个顶点* 每个顶点3个维度(xyz) * 每个维度四字节(float) : faceCount* 2*3*3*4
         FloatBuffer vertex = ByteBuffer.allocateDirect(faceCount * 2 * 3 * 3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
         FloatBuffer vertexNormal = ByteBuffer.allocateDirect(faceCount * 2 * 3 * 3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -280,7 +279,7 @@ public class MapDataConverter {
                 }
             }
         }
-        genFloor(vertex, vertexTexture, vertexNormal, width, height, unit, mapOffsetX, mapOffsetY); //直接画宽高大小的地板
+//        genFloor(vertex, vertexTexture, vertexNormal, width, height, unit, mapOffsetX, mapOffsetY); //直接画宽高大小的地板
 
         vertex.flip();
         vertexNormal.flip();
