@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".Map3DActivity">
-    <com.aaa.lib.map3d.Map3DSurfaceView
+    <com.aaa.lib.mapdemo.Room3DSurfaceView
         android:id="@+id/sv_world"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

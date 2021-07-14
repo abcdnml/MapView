@@ -1,4 +1,4 @@
-package com.aaa.lib.map3d;
+package com.aaa.lib.mapdemo;
 
 import android.graphics.Color;
 import android.util.Log;
@@ -6,7 +6,8 @@ import android.util.SparseArray;
 
 import com.aaa.lib.map3d.obj.MtlInfo;
 import com.aaa.lib.map3d.obj.Obj3D;
-import com.aaa.lib.map3d.obj.Path3D;
+import com.aaa.lib.map3d.obj.Obj3DData;
+import com.aaa.lib.map3d.obj.Path3DData;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -76,7 +77,8 @@ public class MapDataConverter {
     /**
      * 计算地图实际探测到的边界 用于居中
      */
-    public static void getClipArea(int[] clipArea, int width, int height, int[] mapData) {
+    public static int[] getClipArea(int width, int height, int[] mapData) {
+        int[] clipArea = new int[4];
         int minX = width;
         int minY = height;
         int maxX = 0;
@@ -117,8 +119,9 @@ public class MapDataConverter {
             clipArea[2] = width;
             clipArea[3] = height;
         }
-
         Log.i("getClipArea", Arrays.toString(clipArea));
+
+        return clipArea;
     }
 
     /**
@@ -197,7 +200,7 @@ public class MapDataConverter {
 
 
     //数据转换成obj格式
-    public static List<Obj3D> mapDataToObj3D(int width, int height, int[] data, float unit, int offsetX, int offsetY) {
+    public static Obj3DData mapDataToObj3D(int width, int height, int[] data, float unit, int offsetX, int offsetY) {
         int floorFaceCount = 0;
         int wallFaceCount = 0;
         SparseArray<boolean[]> floorFaces = new SparseArray<>();
@@ -226,13 +229,18 @@ public class MapDataConverter {
             }
         }
         //因为地图边缘有很多空白, 直接将坐标系移到地图中心点不合适 , 应该移到裁剪区域的中心点
-        List<Obj3D> obj3Ds = new ArrayList<>();
+        List<Obj3D> objList = new ArrayList<>();
         Obj3D floor = genFloorObj(width, height, data, floorFaces, floorFaceCount, unit, offsetX, offsetY);
-        obj3Ds.add(floor);
+        objList.add(floor);
 
         Obj3D wall = genWallObj(width, height, data, wallFaces, wallFaceCount, unit, offsetX, offsetY);
-        obj3Ds.add(wall);
-        return obj3Ds;
+        objList.add(wall);
+
+        Obj3DData obj3DData = new Obj3DData();
+        obj3DData.setObj3DList(objList);
+        obj3DData.setTop(0);
+        obj3DData.setBottom(-unit);
+        return obj3DData;
     }
 
     /**
@@ -265,14 +273,13 @@ public class MapDataConverter {
         float rectX = unit;
         float rectY = unit;
         float rectZ = unit;
-        Log.i("gen floor ", " mapOffsetX x " + mapOffsetX + " z :" + mapOffsetY);
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
                 int type = data[i * width + j];
                 if (type == 0) {
                     //0 墙内
                     float offsetX = j * unit - mapOffsetX * unit;
-                    float offsetY = rectY / 2;
+                    float offsetY = -rectY / 2;
                     float offsetZ = i * unit - mapOffsetY * unit;
                     boolean[] adjucent = faces.get(i * width + j);
                     addCuboidVertex(vertex, vertexTexture, vertexNormal, rectX / 2, rectY / 2, rectZ / 2, offsetX, offsetY, offsetZ, adjucent);
@@ -343,7 +350,6 @@ public class MapDataConverter {
         vertex.flip();
         vertexNormal.flip();
         vertexTexture.flip();
-//        genWallVetexData(vertex, vertexTexture, vertexNormal,data,  width, height, faces);
         Obj3D obj3D = Obj3D.newBuilder()
                 .mtl(mtlInfo)
                 .vert(vertex)
@@ -485,7 +491,7 @@ public class MapDataConverter {
      * @param pathColor rgb值  不包含透明度  例:Color.WHITE
      * @return
      */
-    public static Path3D convertPathData(float[] xy, float unit, int pathColor, int offsetX, int offsetY) {
+    public static Path3DData convertPathData(float[] xy, int pathColor, float unit, int offsetX, int offsetY) {
         if (xy == null) {
             return null;
         }
@@ -496,7 +502,7 @@ public class MapDataConverter {
         for (int i = 0; i < xy.length / 2; i++) {
             float x = xy[i * 2] * unit - offsetX * unit;         //将地图制定点 缩放平移到3d地图的指定位置
             float z = xy[i * 2 + 1] * unit - offsetY * unit;
-            float y = unit * 3 / 2;
+            float y = unit / 2;
             vertex.put(x);
             vertex.put(y);
             vertex.put(z);
@@ -507,9 +513,9 @@ public class MapDataConverter {
         float bgGreen = Color.green(pathColor) / 255f;
         float bgBlue = Color.blue(pathColor) / 255f;
 
-        Path3D path3D = Path3D.newBuilder().color(new float[]{bgRed, bgGreen, bgBlue}).vert(vertex).build();
+        Path3DData path3DData = Path3DData.newBuilder().color(new float[]{bgRed, bgGreen, bgBlue}).vert(vertex).build();
 
-        return path3D;
+        return path3DData;
     }
 
     /**

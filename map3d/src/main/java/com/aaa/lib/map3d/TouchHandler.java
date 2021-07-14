@@ -25,7 +25,7 @@ public class TouchHandler {
 
             @Override
             public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-                mapView.getRenderer().rotate(distanceX, distanceY);
+                mapView.rotate(distanceX, distanceY);
                 return true;
             }
         });
@@ -41,7 +41,7 @@ public class TouchHandler {
                 float dF = curScaleFactor - preScaleFactor;
                 Log.i(TAG, "onScale preScaleFactor : " + preScaleFactor + " curScaleFactor : " + curScaleFactor);
 
-                mMapView.getRenderer().scale(1f + dF);
+                mMapView.scale(1f + dF);
 
                 preScaleFactor = curScaleFactor;//保存上一次的伸缩值
                 return super.onScale(detector);
@@ -57,7 +57,7 @@ public class TouchHandler {
             @Override
             public void onScaleEnd(ScaleGestureDetector detector) {
                 isScale = false;
-                mapView.getRenderer().onScaleEnd(1);
+                mapView.onScaleEnd(1);
                 super.onScaleEnd(detector);
             }
         });
