@@ -1,4 +1,4 @@
-package com.aaa.lib.mapdemo.model;
+package com.aaa.lib.map3d.imp;
 
 import com.aaa.lib.map3d.model.ObjModel;
 import com.aaa.lib.map3d.obj.Obj3DData;

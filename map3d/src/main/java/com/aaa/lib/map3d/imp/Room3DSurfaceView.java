@@ -1,4 +1,4 @@
-package com.aaa.lib.mapdemo;
+package com.aaa.lib.map3d.imp;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -9,13 +9,6 @@ import com.aaa.lib.map3d.model.Model;
 import com.aaa.lib.map3d.model.ObjModel;
 import com.aaa.lib.map3d.obj.Obj3DData;
 import com.aaa.lib.map3d.obj.Path3DData;
-import com.aaa.lib.mapdemo.bean.Furniture;
-import com.aaa.lib.mapdemo.bean.Power;
-import com.aaa.lib.mapdemo.bean.Sweeper;
-import com.aaa.lib.mapdemo.model.FurnitureModel;
-import com.aaa.lib.mapdemo.model.MapModel;
-import com.aaa.lib.mapdemo.model.PowerModel;
-import com.aaa.lib.mapdemo.model.SweeperModel;
 
 import java.util.ArrayList;
 import java.util.List;

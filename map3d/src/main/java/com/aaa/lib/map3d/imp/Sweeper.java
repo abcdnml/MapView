@@ -1,4 +1,4 @@
-package com.aaa.lib.mapdemo.bean;
+package com.aaa.lib.map3d.imp;
 
 import com.aaa.lib.map3d.obj.Obj3DData;
 
