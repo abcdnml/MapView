@@ -8,7 +8,7 @@ import android.graphics.Bitmap;
 
 public class MtlInfo {
     public String newmtl;
-    public float[] Ka=new float[3];     //阴影色
+    public float[] Ka=new float[]{1,1,1};     //阴影色
     public float[] Kd=new float[3];     //固有色
     public float[] Ks=new float[3];     //高光色
     public float[] Ke=new float[3];     //
