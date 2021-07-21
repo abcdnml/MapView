@@ -214,7 +214,7 @@ public class ObjModel extends Model {
         return data;
     }
 
-    public void onDestory() {
+    public void onDestroy() {
         objVaoArray.clear();
         data.clear();
         clearVAO();

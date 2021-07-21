@@ -83,7 +83,7 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
         queueEvent(new Runnable() {
             @Override
             public void run() {
-                model.onDestory();
+                model.onDestroy();
             }
         });
     }

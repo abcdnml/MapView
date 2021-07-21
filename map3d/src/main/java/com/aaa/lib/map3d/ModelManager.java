@@ -36,6 +36,7 @@ public class ModelManager {
         }
 
         for (int i = 0; i < models.size(); i++) {
+            //TODO 这里遍历删除会有异常
             if (modelList.remove(models.get(i))) {
                 if (modelListener != null) {
                     modelListener.onModelRemove(models.get(i));

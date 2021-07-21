@@ -63,7 +63,7 @@ public abstract class Model {
 
     public abstract void onDraw();
 
-    public abstract void onDestory();
+    public abstract void onDestroy();
 
     public void updateModelData(ModelData data) {
     }

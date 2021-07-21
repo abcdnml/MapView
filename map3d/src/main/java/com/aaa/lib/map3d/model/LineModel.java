@@ -82,7 +82,7 @@ public class LineModel extends Model {
         initVAO();
     }
     @Override
-    public void onDestory() {
+    public void onDestroy() {
         data.clear();
         clearVAO();
         GLES30.glDeleteProgram(programId);
