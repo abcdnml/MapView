@@ -15,13 +15,12 @@ public class MapView<T extends LayerManager> extends View {
 
     protected float max_zoom = 2f;
     protected float min_zoom = 0.5f;
-
-    private TouchHandler mTouchHandler;
     protected Matrix mMatrix;
     protected float[] mMatrixValue;
     protected T mLayerManager;
+    protected int bgColor;
+    private TouchHandler mTouchHandler;
     private boolean canTouch = true;
-    private int bgColor;
 
     public MapView(Context context) {
         this(context, null);
@@ -90,6 +89,10 @@ public class MapView<T extends LayerManager> extends View {
         postInvalidate();
     }
 
+    public int getBackgroundColor() {
+        return bgColor;
+    }
+
     public void setBackgroundColor(int color) {
         bgColor = color;
     }
@@ -132,6 +135,10 @@ public class MapView<T extends LayerManager> extends View {
 
     public void setCanTouch(boolean canTouch) {
         this.canTouch = canTouch;
+    }
+
+    public boolean canTouch() {
+        return canTouch;
     }
 
     public Matrix getTransform() {

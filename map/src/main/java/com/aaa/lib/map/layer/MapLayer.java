@@ -8,7 +8,6 @@ import com.aaa.lib.map.MapView;
 
 public class MapLayer extends BaseLayer {
     private Bitmap mMapBitmap;
-    private MapView mMapView;
     private int mMapWidth;
     private int mMapHeight;
 
@@ -20,12 +19,6 @@ public class MapLayer extends BaseLayer {
         super(mapView, LEVEL_MAP);
         this.mMapView = mapView;
         this.mMapBitmap = bitmap;
-        init();
-    }
-
-    private void init() {
-        mMapWidth = mMapView.getWidth();
-        mMapHeight = mMapView.getHeight();
     }
 
     @Override
