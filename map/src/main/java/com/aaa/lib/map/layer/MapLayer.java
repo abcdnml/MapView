@@ -8,8 +8,6 @@ import com.aaa.lib.map.MapView;
 
 public class MapLayer extends BaseLayer {
     private Bitmap mMapBitmap;
-    private int mMapWidth;
-    private int mMapHeight;
 
     public MapLayer(MapView mapView) {
         this(mapView, null);

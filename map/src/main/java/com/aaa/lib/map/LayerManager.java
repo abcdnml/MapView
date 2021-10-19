@@ -7,31 +7,16 @@ import com.aaa.lib.map.layer.BaseLayer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 public class LayerManager {
 
     protected MapView mMapView;
     protected List<BaseLayer> mLayerList;
-    private BaseLayer mLastInterceptLayer;
+    protected BaseLayer mLastInterceptLayer;
 
-    private LayerListChangeListener layerListChangeListener;
-
-    public LayerManager(MapView mapView) {
-        mMapView = mapView;
-        mLayerList = new ArrayList<>();
-    }
-
-
-    public LayerListChangeListener getLayerListChangeListener() {
-        return layerListChangeListener;
-    }
-
-    public void setLayerListChangeListener(LayerListChangeListener layerListChangeListener) {
-        this.layerListChangeListener = layerListChangeListener;
-    }
-
-
+    protected LayerListChangeListener layerListChangeListener;
     /**
      * 图层排序器
      */
@@ -48,6 +33,19 @@ public class LayerManager {
         }
     };
 
+
+    public LayerManager(MapView mapView) {
+        mMapView = mapView;
+        mLayerList = new ArrayList<>();
+    }
+
+    public LayerListChangeListener getLayerListChangeListener() {
+        return layerListChangeListener;
+    }
+
+    public void setLayerListChangeListener(LayerListChangeListener layerListChangeListener) {
+        this.layerListChangeListener = layerListChangeListener;
+    }
 
     /**
      * 添加单个图层
@@ -84,7 +82,6 @@ public class LayerManager {
                 if (layerListChangeListener != null) {
                     layerListChangeListener.onLayerAdd(layer);
                 }
-
             }
         }
 
@@ -97,33 +94,41 @@ public class LayerManager {
      * @param layer 图层
      */
     public synchronized void removeLayer(BaseLayer layer) {
-        if (mLayerList.contains(layer)) {
-            mLayerList.remove(layer);
+        if (mLayerList.remove(layer) && layerListChangeListener != null) {
+            layerListChangeListener.onLayerRemove(layer);
+        }
+    }
 
+    public synchronized void removeLayers(List<BaseLayer> layers) {
+        mLayerList.removeAll(layers);
+        for (BaseLayer layer : layers) {
             if (layerListChangeListener != null) {
                 layerListChangeListener.onLayerRemove(layer);
             }
         }
     }
 
+
     /**
      * 移除某个类型的图层
      *
      * @param cls 类型
      */
-    public synchronized void removeLayersByType(Class cls) {
+    public synchronized void removeLayersByType(Class... cls) {
         List<BaseLayer> tmpLayerList = new ArrayList<>();
-        for (BaseLayer layer : mLayerList) {
-            if (layer.getClass().equals(cls)) {
-                tmpLayerList.add(layer);
-                if (layerListChangeListener != null) {
-                    layerListChangeListener.onLayerRemove(layer);
+        Iterator<BaseLayer> it = mLayerList.iterator();
+        while (it.hasNext()) {
+            BaseLayer layer = it.next();
+            for (int j = 0; j < cls.length; j++) {
+                if (layer.getClass() == cls[j]) {
+                    tmpLayerList.add(layer);
+                    break;
                 }
             }
         }
-        mLayerList.removeAll(tmpLayerList);
-        //默认莫一种类型的type level都是一样的 所以不进行排序
+        removeLayers(tmpLayerList);
     }
+
 
     /**
      * 图层事件分发控制
@@ -159,15 +164,15 @@ public class LayerManager {
         return false;
     }
 
+    public void clearLayer() {
+        mLayerList.clear();
+    }
+
+
     public interface LayerListChangeListener {
         void onLayerAdd(BaseLayer layer);
 
         void onLayerRemove(BaseLayer layer);
-    }
-
-
-    public void clearLayer() {
-        mLayerList.clear();
     }
 
 
