@@ -48,6 +48,26 @@ public class LayerManager {
     }
 
     /**
+     * 获取指定类型的图层
+     *
+     * @param cls class
+     * @return List<BaseLayer>
+     */
+    public List<BaseLayer> getLayersByType(Class... cls) {
+        List<BaseLayer> layers = new ArrayList<>();
+        for (BaseLayer layer : mLayerList) {
+            for(int i=0; i<cls.length;i++){
+                if (layer.getClass() == cls[i]) {
+                    layers.add(layer);
+                    break;
+                }
+            }
+        }
+        return layers;
+    }
+
+
+    /**
      * 添加单个图层
      *
      * @param layer 图层
