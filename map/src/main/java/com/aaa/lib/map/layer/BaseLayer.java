@@ -16,6 +16,7 @@ public abstract class BaseLayer {
 
     protected int mLayerLevel;
     protected MapView mMapView;
+    protected boolean visible;
     protected Resources mResource;
 
     public BaseLayer(MapView mapView, int level) {
