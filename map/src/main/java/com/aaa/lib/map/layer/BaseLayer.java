@@ -20,9 +20,21 @@ public abstract class BaseLayer {
     protected Resources mResource;
 
     public BaseLayer(MapView mapView, int level) {
+        this(mapView,level,true);
+    }
+    public BaseLayer(MapView mapView, int level,boolean visible) {
         this.mMapView = mapView;
         this.mLayerLevel = level;
         this.mResource=mMapView.getResources();
+        this.visible=visible;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
     }
 
     public int getLayerLevel() {
