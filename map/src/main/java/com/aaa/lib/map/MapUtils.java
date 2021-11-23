@@ -44,29 +44,12 @@ public class MapUtils {
         //1 判断圆心是否在矩形内
         //2 判断矩形的四个点是否在圆内
         //3 判断圆心与矩形四条边的距离是否小于半径
-        if (isCircleInRect(cx, cy, r, x1, y1, x2, y2, x3, y3, x4, y4) ||
+        if (isPointInRectangle(x1, y1, x2, y2, x3, y3, x4, y4,cx, cy) ||
                 isRectVectexInCircle(cx, cy, r, x1, y1, x2, y2, x3, y3, x4, y4) ||
                 isRectBorderCrossCircle(cx, cy, r, x1, y1, x2, y2, x3, y3, x4, y4)) {
             return true;
         }
         return false;
-    }
-
-    private static boolean isCircleInRect(double cx, double cy, double r, double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4) {
-        //判断圆是否在矩形内：判断圆心与四点构成的四个三角形面积之和是否大于矩形面积
-        double sum = 0;
-        sum += triangleArea(cx, cy, x1, y1, x2, y2);
-        sum += triangleArea(cx, cy, x2, y2, x3, y3);
-        sum += triangleArea(cx, cy, x3, y3, x4, y4);
-        sum += triangleArea(cx, cy, x4, y4, x1, y1);
-        double polyArea = 2 * triangleArea(x1, y1, x2, y2, x3, y3);
-        Log.i(TAG, "sum triangleArea: : " + sum + "  polyArea: " + polyArea);
-        if (sum > polyArea) {
-            Log.i(TAG, "isResctrictCrossChargePile isCircleInRect: false");
-            return false;
-        }
-        Log.i(TAG, "isResctrictCrossChargePile isCircleInRect: true");
-        return true;
     }
 
 
@@ -126,28 +109,19 @@ public class MapUtils {
         return isPointInRectangle(p.x, p.y, lt.x, lt.y, rt.x, rt.y, rb.x, rb.y, lb.x, lb.y);
     }
 
-    public static boolean isPointInRectangle(double cx, double cy, double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4) {
-        //判断圆是否在矩形内：判断圆心与四点构成的四个三角形面积之和是否大于矩形面积
-        double sum = 0;
-        sum += triangleArea(cx, cy, x1, y1, x2, y2);
-        sum += triangleArea(cx, cy, x2, y2, x3, y3);
-        sum += triangleArea(cx, cy, x3, y3, x4, y4);
-        sum += triangleArea(cx, cy, x4, y4, x1, y1);
-        double polyArea = 2 * triangleArea(x1, y1, x2, y2, x3, y3);
-        Log.i(TAG, "sum triangleArea: : " + sum + "  polyArea: " + polyArea);
-        //这里浮点计算有误差 所以不能用直接笔记是否大于
-        if (sum - polyArea > 1) {
-            Log.i(TAG, "isAreaCrossPower isCircleInRect: false");
-            return false;
-        }
-        Log.i(TAG, "isAreaCrossPower isCircleInRect: true");
-        return true;
+    //判断是否在矩形内：
+    // 只需要判断该点是否在上下两条边和左右两条边之间就行。
+    // 判断一个点是否在两条线段之间夹着就转化成，
+    // 判断一个点是否在某条线段的一边上，就可以利用叉乘的方向性
+    public static boolean isPointInRectangle(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y, double p4x, double p4y, double px, double py) {
+        boolean result = GetCross(p1x, p1y, p2x, p2y, px, py) * GetCross(p3x, p3y, p4x, p4y, px, py) >= 0 && GetCross(p2x, p2y, p3x, p3y, px, py) * GetCross(p4x, p4y, p1x, p1y, px, py) >= 0;
+        return result;
+    }
+    private static double GetCross(double p1x, double p1y, double p2x, double p2y, double px, double py) {
+        return (p2x - p1x) * (py - p1y) - (px - p1x) * (p2y - p1y);
     }
 
-    //计算三角形的面积
-    private static double triangleArea(double x1, double y1, double x2, double y2, double x3, double y3) {
-        return 0.5 * Math.abs((x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1));
-    }
+
 
     public static PointF getCross(float x1, float y1, float x2, float y2, float x0, float y0) {
         float x = x1;
