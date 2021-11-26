@@ -114,7 +114,8 @@ public class MapUtils {
     // 判断一个点是否在两条线段之间夹着就转化成，
     // 判断一个点是否在某条线段的一边上，就可以利用叉乘的方向性
     public static boolean isPointInRectangle(double p1x, double p1y, double p2x, double p2y, double p3x, double p3y, double p4x, double p4y, double px, double py) {
-        boolean result = GetCross(p1x, p1y, p2x, p2y, px, py) * GetCross(p3x, p3y, p4x, p4y, px, py) >= 0 && GetCross(p2x, p2y, p3x, p3y, px, py) * GetCross(p4x, p4y, p1x, p1y, px, py) >= 0;
+        boolean result = GetCross(p1x, p1y, p2x, p2y, px, py) * GetCross(p3x, p3y, p4x, p4y, px, py) > 0
+                && GetCross(p2x, p2y, p3x, p3y, px, py) * GetCross(p4x, p4y, p1x, p1y, px, py) > 0;
         return result;
     }
     private static double GetCross(double p1x, double p1y, double p2x, double p2y, double px, double py) {
