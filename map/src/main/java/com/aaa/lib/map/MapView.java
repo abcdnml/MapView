@@ -126,7 +126,7 @@ public class MapView<T extends LayerManager> extends View {
 
         //判断是子图层是否处理事件
         if (mLayerManager.dispatchToLayers(event)) {
-            return false;
+            return true;
         }
         //子图层未处理，自己处理 做平移缩放操作
         return mTouchHandler.onTouchEvent(event);
