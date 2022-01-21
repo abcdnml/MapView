@@ -3,6 +3,7 @@
 in vec3 aPos;//顶点
 in vec3 aNormal;//法线
 in vec2 aTexCoords;//纹理
+in vec3 lightDir;
 
 uniform mat4 model;//平移缩放旋转
 uniform mat4 view;//lookat 大概眼睛的位置
@@ -12,6 +13,7 @@ uniform mat4 normal_matrix;//法线矩阵
 out vec2 TexCoords;//传入纹理坐标
 out vec3 Normal;//法线
 out vec3 FragPos;//顶点世界坐标
+out vec3
 
 void main()
 {

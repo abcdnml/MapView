@@ -61,6 +61,12 @@ public class ModelManager {
         }
     }
 
+    public void setLight(float[] light) {
+        for (int i = 0; i < modelList.size(); i++) {
+            modelList.get(i).setLight(light);
+        }
+    }
+
     public void onSurfaceCreate(Context context) {
         for (int i = 0; i < modelList.size(); i++) {
             modelList.get(i).onCreate(context);

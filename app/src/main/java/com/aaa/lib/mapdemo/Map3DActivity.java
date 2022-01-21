@@ -64,16 +64,17 @@ public class Map3DActivity extends AppCompatActivity {
                         .build();
                 map3DSurfaceView.refreshPower(power);
             }
-        }, 9000);
+        }, 1000);
 
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                //删除电源 和 扫地机
-                map3DSurfaceView.refreshPower(null);
-                map3DSurfaceView.refreshSweeper(null);
-            }
-        }, 12000);
+
+//        handler.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                //删除电源 和 扫地机
+//                map3DSurfaceView.refreshPower(null);
+//                map3DSurfaceView.refreshSweeper(null);
+//            }
+//        }, 12000);
     }
 
 

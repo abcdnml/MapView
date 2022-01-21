@@ -10,6 +10,7 @@ import android.view.MotionEvent;
 
 import com.aaa.lib.map3d.model.Model;
 import com.aaa.lib.map3d.obj.ModelData;
+import com.aaa.lib.map3d.utils.MatrixUtils;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -48,6 +49,7 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
         setRenderMode(RENDERMODE_WHEN_DIRTY);
 
 
+
         modelManager = new ModelManager();
         modelManager.setModelListener(this);
         bgColor = Color.argb(1, 33, 162, 254);
@@ -55,9 +57,9 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
                 0, 9, 0 //eye x y z
         };
         light = new float[]{
-                -1f, -8f, 0f,       // direction  x y z
-                0.8f, 0.8f, 0.8f,   // ka
-                0.2f, 0.2f, 0.2f,   // kd
+                -1f, -1f, -1f,       // direction  x y z
+                0.0f, 0.0f, 0.0f,   // ka
+                1, 1, 1,   // kd
                 1.0f, 1.0f, 1.0f,   // ks
         };
 
@@ -132,7 +134,7 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
         float aspectRatio = (width + 0f) / height;
         //眼睛坐标和法向量一定要算好 要不然 看到别的地方去了
         Matrix.setLookAtM(mVMatrix, 0, eye[0], eye[1], eye[2], 0, 0, 0, 0, 0, -1);
-        Matrix.perspectiveM(mProjMatrix, 0, 60, aspectRatio, 0.1f, 100);
+        Matrix.perspectiveM(mProjMatrix, 0, 60, aspectRatio, 1f, 100);
 
         modelManager.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
     }
@@ -161,6 +163,7 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
     //旋转
     public void rotate(float distanceX, float distanceY) {
         rotateX = rotateX + distanceX;
+//        临时去掉旋转限制
         if (rotateY + distanceY > 90 * TOUCH_SCALE_AC || rotateY + distanceY < 0) {
             distanceY = 0;
         } else {
@@ -171,8 +174,24 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
         Matrix.rotateM(modelMatrix, 0, -rotateX / TOUCH_SCALE_AC, 0, 1, 0);
         Matrix.scaleM(modelMatrix, 0, scale, scale, scale);
 
-        modelManager.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
+        float[] oldLightDir=new float[4];
+        oldLightDir[0]=-1;
+        oldLightDir[1]=-1;
+        oldLightDir[2]=-1;
+        oldLightDir[3]=-1;
 
+        float[] newLightDir=new float[4];
+
+        Matrix.multiplyMV(newLightDir,0, modelMatrix,0,oldLightDir,0);
+
+
+        float[] newLight=new float[12];
+        System.arraycopy(light,0,newLight,0,12);
+        newLight[0]=newLightDir[0];
+        newLight[1]=newLightDir[1];
+        newLight[2]=newLightDir[2];
+        modelManager.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
+        modelManager.setLight(newLight);
         requestRender();
     }
 
