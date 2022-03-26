@@ -1,4 +1,4 @@
-package com.aaa.lib.map3d.imp;
+package com.aaa.lib.mapdemo.imp;
 
 import android.content.Context;
 import android.graphics.Bitmap;
