@@ -1,19 +1,19 @@
 package com.aaa.lib.map3d.model;
 
 
-import com.aaa.lib.map3d.obj.Area3D;
+import com.aaa.lib.map3d.obj.Plane3D;
 
-public class AreaModel extends Model<Area3D> {
+public class PlaneModel extends Model<Plane3D> {
 
-    private Area3D area3d;
+    private Plane3D plane3D;
     private int textureId;
 
-    public AreaModel(Area3D area3d){
+    public PlaneModel(Plane3D area3d){
         setData(area3d);
     }
 
-    public Area3D getData() {
-        return area3d;
+    public Plane3D getData() {
+        return plane3D;
     }
 
     @Override
@@ -21,12 +21,12 @@ public class AreaModel extends Model<Area3D> {
         super.clear();
     }
 
-    public Area3D getArea3d() {
-        return area3d;
+    public Plane3D getPlane3D() {
+        return plane3D;
     }
 
-    public void setData(Area3D area3d) {
-        this.area3d = area3d;
+    public void setData(Plane3D plane3D) {
+        this.plane3D = plane3D;
     }
 
     public int getTextureId() {

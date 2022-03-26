@@ -1,4 +1,4 @@
-package com.aaa.lib.map3d.area;
+package com.aaa.lib.mapdemo.area;
 
 import android.graphics.PointF;
 

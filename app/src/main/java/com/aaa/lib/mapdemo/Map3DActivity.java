@@ -6,7 +6,7 @@ import android.os.Handler;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.aaa.lib.map3d.area.RectangleArea;
+import com.aaa.lib.map.area.RectangleArea;
 import com.aaa.lib.map3d.obj.MultiObj3D;
 import com.aaa.lib.map3d.obj.ObjReader;
 import com.aaa.lib.mapdemo.imp.Furniture;
@@ -158,7 +158,7 @@ public class Map3DActivity extends AppCompatActivity {
         rectangleAreas.add(area);
 
 
-        map3DSurfaceView.refreshArea(rectangleAreas);
+//        map3DSurfaceView.refreshArea(rectangleAreas);
 
     }
 

@@ -3,12 +3,12 @@ package com.aaa.lib.map3d;
 import android.opengl.GLES20;
 
 
-import com.aaa.lib.map3d.model.AreaModel;
 import com.aaa.lib.map3d.model.LineModel;
 import com.aaa.lib.map3d.model.Model;
 import com.aaa.lib.map3d.model.ObjModel;
-import com.aaa.lib.map3d.obj.ModelData;
-import com.aaa.lib.map3d.program.AreaProgram;
+import com.aaa.lib.map3d.model.PlaneModel;
+import com.aaa.lib.map3d.obj.Plane3D;
+import com.aaa.lib.map3d.program.TexturePlaneProgram;
 import com.aaa.lib.map3d.program.GLProgram;
 import com.aaa.lib.map3d.program.LineProgram;
 import com.aaa.lib.map3d.program.ModelProgram;
@@ -16,7 +16,6 @@ import com.aaa.lib.map3d.program.ShadowProgram;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static android.opengl.GLES20.GL_COLOR_BUFFER_BIT;
 import static android.opengl.GLES20.GL_DEPTH_BUFFER_BIT;
@@ -29,7 +28,7 @@ public class ModelManager {
     public ShadowProgram shadowProgram;
     public ModelProgram modelProgram;
     public LineProgram lineProgram;
-    public AreaProgram areaProgram;
+    public TexturePlaneProgram texturePlaneProgram;
 
     private volatile List<Model> modelList = new ArrayList<>();
 
@@ -115,7 +114,7 @@ public class ModelManager {
         modelProgram = new ModelProgram();
         shadowProgram = new ShadowProgram();
         lineProgram = new LineProgram();
-        areaProgram = new AreaProgram();
+        texturePlaneProgram = new TexturePlaneProgram();
 
         for (int i = 0; i < modelList.size(); i++) {
             Model model = modelList.get(i);
@@ -146,8 +145,8 @@ public class ModelManager {
             return modelProgram;
         } else if (model instanceof LineModel) {
             return lineProgram;
-        } else if (model instanceof AreaModel) {
-            return areaProgram;
+        } else if (model instanceof PlaneModel) {
+            return texturePlaneProgram;
         }
         return null;
     }
@@ -171,8 +170,8 @@ public class ModelManager {
                         worldSurfaceView.getLight(), worldSurfaceView.getEye());
             } else if (model instanceof LineModel) {
                 lineProgram.draw((LineModel) model, mMatrix, vMatrix, pMatrix);
-            } else if (model instanceof AreaModel) {
-                areaProgram.draw((AreaModel) model, mMatrix, vMatrix, pMatrix);
+            } else if (model instanceof PlaneModel) {
+                texturePlaneProgram.draw((PlaneModel) model, mMatrix, vMatrix, pMatrix);
             }
         }
     }

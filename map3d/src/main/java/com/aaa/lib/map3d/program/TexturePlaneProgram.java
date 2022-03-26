@@ -4,8 +4,8 @@ import android.opengl.GLES20;
 import android.opengl.GLES30;
 
 
-import com.aaa.lib.map3d.model.AreaModel;
-import com.aaa.lib.map3d.obj.Area3D;
+import com.aaa.lib.map3d.model.PlaneModel;
+import com.aaa.lib.map3d.obj.Plane3D;
 
 import static android.opengl.GLES20.GL_FRAMEBUFFER;
 import static android.opengl.GLES20.GL_TEXTURE0;
@@ -23,9 +23,9 @@ import static android.opengl.GLES20.glUniformMatrix4fv;
 import static android.opengl.GLES20.glUseProgram;
 import static android.opengl.GLES20.glVertexAttribPointer;
 
-public class AreaProgram extends GLProgram<AreaModel> {
+public class TexturePlaneProgram extends GLProgram<PlaneModel> {
 
-    public AreaProgram() {
+    public TexturePlaneProgram() {
         createFromAsset(context, "shader/image.vert", "shader/image.frag");
     }
 
@@ -35,8 +35,8 @@ public class AreaProgram extends GLProgram<AreaModel> {
     }
 
     @Override
-    public void genVao(AreaModel model) {
-        Area3D area3D = model.getArea3d();
+    public void genVao(PlaneModel model) {
+        Plane3D area3D = model.getPlane3D();
 
         int[] vaos = new int[1];
         int[] vbos = new int[2];
@@ -61,7 +61,7 @@ public class AreaProgram extends GLProgram<AreaModel> {
         model.setTextureId(createTexture(area3D.bitmap));
     }
 
-    public void draw(AreaModel model, float[] mMatrix, float[] vMatrix, float[] pMatrix) {
+    public void draw(PlaneModel model, float[] mMatrix, float[] vMatrix, float[] pMatrix) {
         glUseProgram(programId);
 
         //设置默认的帧缓冲
@@ -76,7 +76,7 @@ public class AreaProgram extends GLProgram<AreaModel> {
         glUniformMatrix4fv(glGetUniformLocation(programId, "mat_view"), 1, false, vMatrix, 0);
         glUniformMatrix4fv(glGetUniformLocation(programId, "mat_proj"), 1, false, pMatrix, 0);
 
-        Area3D area3D = model.getArea3d();
+        Plane3D area3D = model.getPlane3D();
 
         //激活第 textureIndex 号纹理
         glActiveTexture(GL_TEXTURE0 + TEXTURE_INDEX_AREA);

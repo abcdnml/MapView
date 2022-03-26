@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context=".Map3DActivity">
-    <com.aaa.lib.map3d.imp.Room3DSurfaceView
+    <com.aaa.lib.mapdemo.imp.Room3DSurfaceView
         android:id="@+id/sv_world"
         android:layout_width="match_parent"
         android:layout_weight="1"

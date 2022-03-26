@@ -7,13 +7,13 @@ import android.graphics.Color;
 import android.util.Log;
 import android.util.SparseArray;
 
-import com.aaa.lib.map3d.R;
-import com.aaa.lib.map3d.area.RectangleArea;
-import com.aaa.lib.map3d.obj.Area3D;
+import com.aaa.lib.map.area.RectangleArea;
 import com.aaa.lib.map3d.obj.MtlInfo;
 import com.aaa.lib.map3d.obj.MultiObj3D;
 import com.aaa.lib.map3d.obj.Obj3D;
 import com.aaa.lib.map3d.obj.Path3D;
+import com.aaa.lib.map3d.obj.Plane3D;
+import com.aaa.lib.mapdemo.R;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -256,7 +256,7 @@ public class MapDataConverter {
         return multiObj3D;
     }
 
-    public static Area3D areaToObj(Context context, float resolution, RectangleArea rectangleArea) {
+    public static Plane3D areaToObj(Context context, float resolution, RectangleArea rectangleArea) {
         Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.forbid_area);
         float wallTileSize = 1f;
         float wallTileUnit = resolution;  //地图每一格栅格 在现实中为0.05  在opengl中也是0.05
@@ -275,13 +275,13 @@ public class MapDataConverter {
         //虚拟墙上下两个面不画
         boolean[] adjust = new boolean[]{false, false, false, false, true, true};
         addAreaCuboidVertex(vertex, vertexTexture,
-                rectangleArea.width * wallTileUnit, wallHeight*wallTileUnit, rectangleArea.height * wallTileUnit,
+                rectangleArea.width * wallTileUnit, wallHeight * wallTileUnit, rectangleArea.height * wallTileUnit,
                 rectangleArea.width * wallTileUnit, wallHeight, rectangleArea.height * wallTileUnit,
                 offsetX, offsetY, offsetZ,
                 adjust);
         vertex.flip();
         vertexTexture.flip();
-        Area3D area3D = Area3D.newBuilder().bitmap(bitmap).vertex(vertex).texture(vertexTexture).build();
+        Plane3D area3D = Plane3D.newBuilder().bitmap(bitmap).vertex(vertex).texture(vertexTexture).build();
 
         return area3D;
     }
@@ -464,7 +464,7 @@ public class MapDataConverter {
                     boolean[] adjucent = faces.get(i * width + j);
 
                     float offsetX = -width / 2 * wallTileUnit;
-                    float offsetY = wallTileUnit *10;
+                    float offsetY = wallTileUnit * 10;
                     float offsetZ = -height / 2 * wallTileUnit;
 
                     addWallCuboidVertex(vertex, vertexTexture, vertexNormal,

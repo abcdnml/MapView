@@ -4,16 +4,12 @@ import android.graphics.Bitmap;
 
 import java.nio.FloatBuffer;
 
-public class Area3D extends ModelData {
+public class Plane3D {
     public Bitmap bitmap;
     public FloatBuffer vertex;
     public FloatBuffer texture;
 
-    private Area3D(){
-
-    }
-
-    private Area3D(Builder builder) {
+    private Plane3D(Builder builder) {
         bitmap = builder.bitmap;
         vertex = builder.vertex;
         texture = builder.texture;
@@ -22,6 +18,7 @@ public class Area3D extends ModelData {
     public static Builder newBuilder() {
         return new Builder();
     }
+
 
     public static final class Builder {
         private Bitmap bitmap;
@@ -46,8 +43,8 @@ public class Area3D extends ModelData {
             return this;
         }
 
-        public Area3D build() {
-            return new Area3D(this);
+        public Plane3D build() {
+            return new Plane3D(this);
         }
     }
 }
