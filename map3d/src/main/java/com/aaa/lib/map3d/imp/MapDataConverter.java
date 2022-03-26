@@ -1,13 +1,19 @@
 package com.aaa.lib.map3d.imp;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.util.Log;
 import android.util.SparseArray;
 
+import com.aaa.lib.map3d.R;
+import com.aaa.lib.map3d.area.RectangleArea;
+import com.aaa.lib.map3d.obj.Area3D;
 import com.aaa.lib.map3d.obj.MtlInfo;
+import com.aaa.lib.map3d.obj.MultiObj3D;
 import com.aaa.lib.map3d.obj.Obj3D;
-import com.aaa.lib.map3d.obj.Obj3DData;
-import com.aaa.lib.map3d.obj.Path3DData;
+import com.aaa.lib.map3d.obj.Path3D;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -17,17 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MapDataConverter {
-    //原始立方体顶点坐标
-    private static final float[] originCubeVertex = new float[]{
-            -1, 1, 1,//前 左 上
-            1, 1, 1,//前 右 上
-            1, -1, 1,//前 右 下
-            -1, -1, 1,//前 左 下
-            -1, 1, -1,//后 左 上
-            1, 1, -1,//后 右 上
-            1, -1, -1,//后 右 下
-            -1, -1, -1,//后 左 下
-    };
     //每块地板立方体顶点坐标  需要根据位置来计算
     private static final float[] currentCubeVertex = new float[24];
     //法线坐标
@@ -39,7 +34,6 @@ public class MapDataConverter {
             0, 0, 1,//前
             0, 0, -1//后
     };
-    //纹理坐标
     private static final float[] originCubeTextureCoordinate = new float[]{
             0.0f, 0.0f,
             0.0f, 1.0f,
@@ -48,12 +42,12 @@ public class MapDataConverter {
     };
     //绘制一个立方体的36个顶点的索引
     private static final int[] vertexIndex = new int[]{
-            0, 1, 2, 0, 2, 3,//正面两个三角形
-            4, 5, 6, 4, 6, 7,//背面
-            0, 4, 7, 0, 7, 3,//左侧
-            1, 5, 6, 1, 6, 2, //右侧
-            0, 1, 5, 0, 5, 4,//上
-            3, 2, 6, 3, 6, 7
+            3, 1, 0, 3, 2, 1,//正面两个三角形
+            6, 4, 5, 6, 7, 4,//背面
+            7, 0, 4, 7, 3, 0,//左侧
+            2, 5, 1, 2, 6, 5, //右侧
+            0, 5, 4, 0, 1, 5, //上
+            7, 2, 3, 7, 6, 2
     };
     //立方体的36个顶点法向量的索引
     private static final int[] normalIndex = new int[]{
@@ -66,13 +60,32 @@ public class MapDataConverter {
     };
     //立方体的36个顶点纹理的索引
     private static final int[] textureIndex = new int[]{
-            0, 1, 2, 0, 2, 3,//正面两个三角形
-            1, 0, 3, 1, 3, 2,//背面
-            1, 0, 3, 1, 3, 2,//左侧
-            0, 1, 2, 0, 2, 3, //右侧
-            3, 2, 1, 3, 1, 0,//上
-            0, 1, 2, 0, 2, 3//下
+            1, 3, 0, 1, 2, 3,//正面两个三角形
+            1, 3, 0, 1, 2, 3,//背面
+            1, 3, 0, 1, 2, 3,//左侧
+            1, 3, 0, 1, 2, 3, //右侧
+            1, 3, 0, 1, 2, 3, //上
+            1, 3, 0, 1, 2, 3//下
     };
+    //原始立方体顶点坐标
+    static float[] originCubeVertex = new float[]{
+            -0.5f, 0.5f, 0.5f,//前 左 上
+            0.5f, 0.5f, 0.5f,//前 右 上
+            0.5f, -0.5f, 0.5f,//前 右 下
+            -0.5f, -0.5f, 0.5f,//前 左 下
+            -0.5f, 0.5f, -0.5f,//后 左 上
+            0.5f, 0.5f, -0.5f,//后 右 上
+            0.5f, -0.5f, -0.5f,//后 右 下
+            -0.5f, -0.5f, -0.5f,//后 左 下
+    };
+    //纹理坐标
+    //纹理坐标
+    static float[] currentCubeTexture = new float[8];
+    static float[] currentFloorDownTexture = new float[8];
+    static float[] currentWallBackTexture = new float[8];
+    static float[] currentWallFrontTexture = new float[8];
+    static float[] currentWallLeftTexture = new float[8];
+    static float[] currentWallRightTexture = new float[8];
 
     /**
      * 计算地图实际探测到的边界 用于居中
@@ -200,7 +213,7 @@ public class MapDataConverter {
 
 
     //数据转换成obj格式
-    public static Obj3DData mapDataToObj3D(int width, int height, int[] data, float unit, int offsetX, int offsetY) {
+    public static MultiObj3D mapDataToObj3D(Context context, int width, int height, int[] data, float unit, int offsetX, int offsetY) {
         int floorFaceCount = 0;
         int wallFaceCount = 0;
         SparseArray<boolean[]> floorFaces = new SparseArray<>();
@@ -230,18 +243,49 @@ public class MapDataConverter {
         }
         //因为地图边缘有很多空白, 直接将坐标系移到地图中心点不合适 , 应该移到裁剪区域的中心点
         List<Obj3D> objList = new ArrayList<>();
-        Obj3D floor = genFloorObj(width, height, data, floorFaces, floorFaceCount, unit, offsetX, offsetY);
+        Obj3D floor = genFloorObj(context, width, height, data, floorFaces, floorFaceCount, unit, offsetX, offsetY);
         objList.add(floor);
 
-        Obj3D wall = genWallObj(width, height, data, wallFaces, wallFaceCount, unit, offsetX, offsetY);
+        Obj3D wall = genWallObj(context, width, height, data, wallFaces, wallFaceCount, unit, offsetX, offsetY);
         objList.add(wall);
 
-        Obj3DData obj3DData = new Obj3DData();
-        obj3DData.setObj3DList(objList);
-        obj3DData.setTop(0);
-        obj3DData.setBottom(-unit);
-        return obj3DData;
+        MultiObj3D multiObj3D = new MultiObj3D();
+        multiObj3D.setObj3DList(objList);
+        multiObj3D.setTop(0);
+        multiObj3D.setBottom(-unit);
+        return multiObj3D;
     }
+
+    public static Area3D areaToObj(Context context, float resolution, RectangleArea rectangleArea) {
+        Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.forbid_area);
+        float wallTileSize = 1f;
+        float wallTileUnit = resolution;  //地图每一格栅格 在现实中为0.05  在opengl中也是0.05
+        float wallHeight = 10;
+        float wallTextureUnit = resolution / wallTileSize;
+
+        FloatBuffer vertex = ByteBuffer.allocateDirect(4 * 2 * 3 * 3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        FloatBuffer vertexTexture = ByteBuffer.allocateDirect(4 * 2 * 3 * 2 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        Log.i("mapdataconverter", "rectangleArea x  " + rectangleArea.toString());
+        float offsetX = -rectangleArea.center.x * wallTileUnit;
+        float offsetY = wallTileUnit * wallHeight;
+        float offsetZ = -rectangleArea.center.y * wallTileUnit;
+
+        Log.i("mapdataconverter", "offset x  " + offsetX + " y " + offsetZ);
+
+        //虚拟墙上下两个面不画
+        boolean[] adjust = new boolean[]{false, false, false, false, true, true};
+        addAreaCuboidVertex(vertex, vertexTexture,
+                rectangleArea.width * wallTileUnit, wallHeight*wallTileUnit, rectangleArea.height * wallTileUnit,
+                rectangleArea.width * wallTileUnit, wallHeight, rectangleArea.height * wallTileUnit,
+                offsetX, offsetY, offsetZ,
+                adjust);
+        vertex.flip();
+        vertexTexture.flip();
+        Area3D area3D = Area3D.newBuilder().bitmap(bitmap).vertex(vertex).texture(vertexTexture).build();
+
+        return area3D;
+    }
+
 
     /**
      * 生成地板的Obj3D 对象
@@ -253,16 +297,20 @@ public class MapDataConverter {
      * @param faceCount 绘制面的个数
      * @return Obj3D
      */
-    public static Obj3D genFloorObj(int width, int height, int[] data, SparseArray<boolean[]> faces, int faceCount, float unit, int mapOffsetX, int mapOffsetY) {
+    public static Obj3D genFloorObj(Context context, int width, int height, int[] data, SparseArray<boolean[]> faces, int faceCount, float unit, int mapOffsetX, int mapOffsetY) {
 
-//        Bitmap bitmap= BitmapFactory.decodeResource(getResources(), R.mipmap.chat);
+        //        Bitmap bitmap= BitmapFactory.decodeResource(getResources(), R.mipmap.chat);
+        Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.woodfloor);
+        Bitmap normalBitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.woodfloor_normal);
+
         MtlInfo mtlInfo = MtlInfo.newBuilder()
                 .Ka(new float[]{1, 1, 1})
-                .Kd(new float[]{1, 1, 1})
-                .Ks(new float[]{1f, 1f, 1f})
+                .Kd(new float[]{245 / 255f, 245 / 255f, 245 / 255f})
+                .Ks(new float[]{18 / 255f, 18 / 255f, 18 / 255f})
                 .Ke(new float[]{1f, 1f, 1f})
-                .Ns(50)
-//                .bitmap(bitmap)
+                .kd(bitmap)
+                .kdNormal(normalBitmap)
+                .Ns(1)
                 .illum(7)
                 .build();
 
@@ -270,7 +318,66 @@ public class MapDataConverter {
         FloatBuffer vertex = ByteBuffer.allocateDirect(faceCount * 2 * 3 * 3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
         FloatBuffer vertexNormal = ByteBuffer.allocateDirect(faceCount * 2 * 3 * 3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
         FloatBuffer vertexTexture = ByteBuffer.allocateDirect(faceCount * 2 * 3 * 2 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        float rectX = unit;
+
+        genFloorVetextData(vertex, vertexTexture, vertexNormal, data, width, height, faces, unit);
+
+        Obj3D obj3D = Obj3D.newBuilder()
+                .mtl(mtlInfo)
+                .position(vertex)
+                .normal(vertexNormal)
+                .texture(vertexTexture)
+                .vertCount(vertex.limit() / 3)
+                .build();
+        return obj3D;
+    }
+
+    /**
+     * 生成墙的Obj3D 对象
+     *
+     * @param width     地图宽
+     * @param height    地图高
+     * @param data      地图数据
+     * @param faces     需要绘制的面
+     * @param faceCount 绘制面的个数
+     * @return Obj3D
+     * 当前墙和地板只有高度不同,  后期可能会有其他变化
+     */
+    public static Obj3D genWallObj(Context context, int width, int height, int[] data, SparseArray<boolean[]> faces, int faceCount, float unit, int mapOffsetX, int mapOffsetY) {
+        Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.brickwall);
+        Bitmap normalBitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.brickwall_normal);
+
+        MtlInfo mtlInfo = MtlInfo.newBuilder()
+                .Ka(new float[]{1, 1, 1})
+                .Kd(new float[]{1, 1, 1})
+                .Ks(new float[]{1f, 1f, 1f})
+                .Ke(new float[]{1f, 1f, 1f})
+                .Ns(50)
+                .kd(bitmap)
+                .kdNormal(normalBitmap)
+                .illum(7)
+                .build();
+        FloatBuffer vertex = ByteBuffer.allocateDirect(faceCount * 2 * 3 * 3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        FloatBuffer vertexNormal = ByteBuffer.allocateDirect(faceCount * 2 * 3 * 3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        FloatBuffer vertexTexture = ByteBuffer.allocateDirect(faceCount * 2 * 3 * 2 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
+
+        genWallVetexData(vertex, vertexTexture, vertexNormal, data, width, height, faces, unit);
+
+        Obj3D obj3D = Obj3D.newBuilder()
+                .mtl(mtlInfo)
+                .position(vertex)
+                .normal(vertexNormal)
+                .texture(vertexTexture)
+                .vertCount(vertex.limit() / 3)
+                .build();
+        return obj3D;
+    }
+
+    /**
+     * 把顶点数据添加到Buffer中
+     */
+    public static void genFloorVetextData(FloatBuffer vertex, FloatBuffer vertexTexture, FloatBuffer vertexNormal, int[] data, int width, int height, SparseArray<boolean[]> faces, float unit) {
+
+        /*        float rectX = unit;
         float rectY = unit;
         float rectZ = unit;
         for (int i = 0; i < height; i++) {
@@ -290,46 +397,40 @@ public class MapDataConverter {
 
         vertex.flip();
         vertexNormal.flip();
+        vertexTexture.flip();*/
+        float floorTileSize = 1f;
+        float floorTileUnit = unit;
+        float floorTileTextureUnit = unit / floorTileSize;
+
+        float offsetX = -width / 2 * floorTileUnit;
+        float offsetY = -floorTileUnit / 2;
+        float offsetZ = -height / 2 * floorTileUnit;
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                int type = data[i * width + j];
+                if (type == 0) {
+                    //0 墙内
+                    boolean[] adjucent = faces.get(i * width + j);
+                    addfloorCuboidVertex(vertex, vertexTexture, vertexNormal,
+                            floorTileUnit, floorTileUnit, floorTileUnit,
+                            floorTileTextureUnit, floorTileTextureUnit, floorTileTextureUnit, //每一格纹理大小,一格是0.05 代表现实的5厘米, , 地砖如果是0.8m, 那么16格就是一块地砖  1格的纹理大小就是1/16
+                            j, 0, i,
+                            offsetX, offsetY, offsetZ,
+                            adjucent);
+                }
+            }
+        }
+        //genFloor(vertex, vertexTexture, vertexNormal, width, height, resolution); //直接画宽高大小的地板
+
+        vertex.flip();
+        vertexNormal.flip();
         vertexTexture.flip();
 
-        Obj3D obj3D = Obj3D.newBuilder()
-                .mtl(mtlInfo)
-                .vert(vertex)
-                .vertNorl(vertexNormal)
-                .vertTexture(vertexTexture)
-                .vertCount(vertex.limit() / 3)
-                .build();
-        return obj3D;
+
     }
 
-    /**
-     * 生成墙的Obj3D 对象
-     *
-     * @param width     地图宽
-     * @param height    地图高
-     * @param data      地图数据
-     * @param faces     需要绘制的面
-     * @param faceCount 绘制面的个数
-     * @return Obj3D
-     * 当前墙和地板只有高度不同,  后期可能会有其他变化
-     */
-    public static Obj3D genWallObj(int width, int height, int[] data, SparseArray<boolean[]> faces, int faceCount, float unit, int mapOffsetX, int mapOffsetY) {
-//        Bitmap bitmap=BitmapFactory.decodeResource(getResources(),R.mipmap.chat);
-        MtlInfo mtlInfo = MtlInfo.newBuilder()
-                .Ka(new float[]{1, 1, 1})
-                .Kd(new float[]{1, 1, 1})
-                .Ks(new float[]{1f, 1f, 1f})
-                .Ke(new float[]{1f, 1f, 1f})
-                .Ns(50)
-//                .bitmap(bitmap)
-                .illum(7)
-                .build();
-        FloatBuffer vertex = ByteBuffer.allocateDirect(faceCount * 2 * 3 * 3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        FloatBuffer vertexNormal = ByteBuffer.allocateDirect(faceCount * 2 * 3 * 3 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
-        FloatBuffer vertexTexture = ByteBuffer.allocateDirect(faceCount * 2 * 3 * 2 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
-
-
-        float rectX = unit;
+    public static void genWallVetexData(FloatBuffer vertex, FloatBuffer vertexTexture, FloatBuffer vertexNormal, int[] data, int width, int height, SparseArray<boolean[]> faces, float unit) {
+        /*        float rectX = unit;
         float rectY = 20 * unit;
         float rectZ = unit;
         for (int i = 0; i < height; i++) {
@@ -349,15 +450,35 @@ public class MapDataConverter {
         }
         vertex.flip();
         vertexNormal.flip();
+        vertexTexture.flip();*/
+
+        float wallTileSize = 0.78f;
+        float wallTileUnit = unit;
+        float wallTextureUnit = unit / wallTileSize;
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                int type = data[i * width + j];
+                //计算立方体6个面有无相邻
+                if (type == 1) {
+                    //1 墙
+                    boolean[] adjucent = faces.get(i * width + j);
+
+                    float offsetX = -width / 2 * wallTileUnit;
+                    float offsetY = wallTileUnit *10;
+                    float offsetZ = -height / 2 * wallTileUnit;
+
+                    addWallCuboidVertex(vertex, vertexTexture, vertexNormal,
+                            wallTileUnit, wallTileUnit * 20, wallTileUnit,
+                            wallTextureUnit, wallTextureUnit * 20, wallTextureUnit, //纹理大小,  一格是0.05 代表现实的5厘米, 20格就是纹理坐标的1 , 地砖如果是0.8, 那么16格就是一块地砖  1格就是1/16
+                            j, 0, i,
+                            offsetX, offsetY, offsetZ,
+                            adjucent);
+                }
+            }
+        }
+        vertex.flip();
+        vertexNormal.flip();
         vertexTexture.flip();
-        Obj3D obj3D = Obj3D.newBuilder()
-                .mtl(mtlInfo)
-                .vert(vertex)
-                .vertNorl(vertexNormal)
-                .vertTexture(vertexTexture)
-                .vertCount(vertex.limit() / 3)
-                .build();
-        return obj3D;
     }
 
     /**
@@ -448,6 +569,216 @@ public class MapDataConverter {
         return faceCount;
     }
 
+    public static void addfloorCuboidVertex(FloatBuffer v, FloatBuffer vt, FloatBuffer vn,
+                                            float rectX, float rectY, float rectZ,
+                                            float textureX, float textureY, float textureZ,
+                                            float positionX, float positionY, float positionZ,
+                                            float offsetX, float offsetY, float offsetZ,
+                                            boolean[] adjucent) {
+        //每个矩形根据位置不同 重新设置长宽高和偏移
+        for (int i = 0; i < currentCubeVertex.length; i++) {
+            if (i % 3 == 0) {
+                currentCubeVertex[i] = (originCubeVertex[i] + positionX) * rectX + offsetX;
+            } else if (i % 3 == 1) {
+                currentCubeVertex[i] = (originCubeVertex[i] + positionY) * rectY + offsetY;
+            } else if (i % 3 == 2) {
+                currentCubeVertex[i] = (originCubeVertex[i] + positionZ) * rectZ + offsetZ;
+            }
+        }
+
+        for (int i = 0; i < originCubeTextureCoordinate.length; i++) {
+            if (i % 2 == 0) {
+                currentCubeTexture[i] = (originCubeTextureCoordinate[i] + positionX) * textureX;
+
+                currentFloorDownTexture[i] = (originCubeTextureCoordinate[i] + positionX) * textureX;
+            } else if (i % 2 == 1) {
+                currentCubeTexture[i] = (originCubeTextureCoordinate[i] + positionZ) * textureZ;
+
+                currentFloorDownTexture[i] = (originCubeTextureCoordinate[i] - positionZ) * textureZ;
+            }
+        }
+
+
+        for (int i = 0; i < adjucent.length; i++) {
+            //根据adjucent 判断需要添加几个面 有相邻的面不用添加
+            //每个面六个点 每个点有 坐标xyz 法向量xyz 纹理坐标xy
+            if (!adjucent[i]) {
+                for (int j = 0; j < 6; j++) {
+                    int k = i * 6 + j;
+                    v.put(currentCubeVertex[vertexIndex[k] * 3]);
+                    v.put(currentCubeVertex[vertexIndex[k] * 3 + 1]);
+                    v.put(currentCubeVertex[vertexIndex[k] * 3 + 2]);
+
+                    vn.put(originCubeNormal[normalIndex[k] * 3]);
+                    vn.put(originCubeNormal[normalIndex[k] * 3 + 1]);
+                    vn.put(originCubeNormal[normalIndex[k] * 3 + 2]);
+
+                    //                    vt.put(originCubeTextureCoordinate[textureIndex[k] * 2]);
+                    //                    vt.put(originCubeTextureCoordinate[textureIndex[k] * 2 + 1]);
+
+                    if (i == 4) {
+                        vt.put(currentCubeTexture[textureIndex[k] * 2]);
+                        vt.put(currentCubeTexture[textureIndex[k] * 2 + 1]);
+                    } else if (i == 5) {
+                        vt.put(currentFloorDownTexture[textureIndex[k] * 2]);
+                        vt.put(currentFloorDownTexture[textureIndex[k] * 2 + 1]);
+                    } else {
+                        vt.put(0.5f);
+                        vt.put(0.5f);
+                    }
+                }
+            }
+
+        }
+    }
+
+    public static void addAreaCuboidVertex(FloatBuffer v, FloatBuffer vt,
+                                           float rectX, float rectY, float rectZ,
+                                           float textureX, float textureY, float textureZ,
+                                           float offsetX, float offsetY, float offsetZ,
+                                           boolean[] adjucent) {
+        //每个矩形根据位置不同 重新设置长宽高和偏移
+        for (int i = 0; i < currentCubeVertex.length; i++) {
+            if (i % 3 == 0) {
+                currentCubeVertex[i] = (originCubeVertex[i]) * rectX + offsetX;
+            } else if (i % 3 == 1) {
+                currentCubeVertex[i] = (originCubeVertex[i]) * rectY + offsetY;
+            } else if (i % 3 == 2) {
+                currentCubeVertex[i] = (originCubeVertex[i]) * rectZ + offsetZ;
+            }
+        }
+
+
+        for (int i = 0; i < originCubeTextureCoordinate.length; i++) {
+            if (i % 2 == 0) {
+                currentWallFrontTexture[i] = (originCubeTextureCoordinate[i]) * textureX;
+                currentWallBackTexture[i] = (originCubeTextureCoordinate[i]) * textureX;
+
+                currentWallLeftTexture[i] = (originCubeTextureCoordinate[i]) * textureZ;
+                currentWallRightTexture[i] = (originCubeTextureCoordinate[i]) * textureZ;
+            } else if (i % 2 == 1) {
+                currentWallFrontTexture[i] = originCubeTextureCoordinate[i] * textureY;
+                currentWallBackTexture[i] = originCubeTextureCoordinate[i] * textureY;
+
+                currentWallLeftTexture[i] = originCubeTextureCoordinate[i] * textureY;
+                currentWallRightTexture[i] = originCubeTextureCoordinate[i] * textureY;
+            }
+        }
+
+
+        for (int i = 0; i < adjucent.length; i++) {
+            //根据adjucent 判断需要添加几个面 有相邻的面不用添加
+            //每个面六个点 每个点有 坐标xyz 法向量xyz 纹理坐标xy
+            if (!adjucent[i]) {
+                for (int j = 0; j < 6; j++) {
+                    int k = i * 6 + j;
+                    v.put(currentCubeVertex[vertexIndex[k] * 3]);
+                    v.put(currentCubeVertex[vertexIndex[k] * 3 + 1]);
+                    v.put(currentCubeVertex[vertexIndex[k] * 3 + 2]);
+
+                    if (i == 0) {
+                        vt.put(currentWallFrontTexture[textureIndex[k] * 2]);
+                        vt.put(currentWallFrontTexture[textureIndex[k] * 2 + 1]);
+                    } else if (i == 1) {
+                        vt.put(currentWallBackTexture[textureIndex[k] * 2]);
+                        vt.put(currentWallBackTexture[textureIndex[k] * 2 + 1]);
+                    } else if (i == 2) {
+                        vt.put(currentWallLeftTexture[textureIndex[k] * 2]);
+                        vt.put(currentWallLeftTexture[textureIndex[k] * 2 + 1]);
+                    } else if (i == 3) {
+                        vt.put(currentWallRightTexture[textureIndex[k] * 2]);
+                        vt.put(currentWallRightTexture[textureIndex[k] * 2 + 1]);
+                    } else {
+                        //没有上下两个面
+                        vt.put(0.5f);
+                        vt.put(0.5f);
+                    }
+
+
+                }
+            }
+
+        }
+    }
+
+    public static void addWallCuboidVertex(FloatBuffer v, FloatBuffer vt, FloatBuffer vn,
+                                           float rectX, float rectY, float rectZ,
+                                           float textureX, float textureY, float textureZ,
+                                           float positionX, float positionY, float positionZ,
+                                           float offsetX, float offsetY, float offsetZ,
+
+                                           boolean[] adjucent) {
+        //每个矩形根据位置不同 重新设置长宽高和偏移
+        for (int i = 0; i < currentCubeVertex.length; i++) {
+            if (i % 3 == 0) {
+                currentCubeVertex[i] = (originCubeVertex[i] + positionX) * rectX + offsetX;
+            } else if (i % 3 == 1) {
+                currentCubeVertex[i] = (originCubeVertex[i] + positionY) * rectY + offsetY;
+            } else if (i % 3 == 2) {
+                currentCubeVertex[i] = (originCubeVertex[i] + positionZ) * rectZ + offsetZ;
+            }
+        }
+
+
+        for (int i = 0; i < originCubeTextureCoordinate.length; i++) {
+            if (i % 2 == 0) {
+                currentWallFrontTexture[i] = (originCubeTextureCoordinate[i] + positionX) * textureX;
+                currentWallBackTexture[i] = (originCubeTextureCoordinate[i] - positionX) * textureX;
+
+                currentWallLeftTexture[i] = (originCubeTextureCoordinate[i] + positionZ) * textureZ;
+                currentWallRightTexture[i] = (originCubeTextureCoordinate[i] - positionZ) * textureZ;
+            } else if (i % 2 == 1) {
+                currentWallFrontTexture[i] = originCubeTextureCoordinate[i] * textureY;
+                currentWallBackTexture[i] = originCubeTextureCoordinate[i] * textureY;
+
+                currentWallLeftTexture[i] = originCubeTextureCoordinate[i] * textureY;
+                currentWallRightTexture[i] = originCubeTextureCoordinate[i] * textureY;
+            }
+        }
+
+
+        for (int i = 0; i < adjucent.length; i++) {
+            //根据adjucent 判断需要添加几个面 有相邻的面不用添加
+            //每个面六个点 每个点有 坐标xyz 法向量xyz 纹理坐标xy
+            if (!adjucent[i]) {
+                for (int j = 0; j < 6; j++) {
+                    int k = i * 6 + j;
+                    v.put(currentCubeVertex[vertexIndex[k] * 3]);
+                    v.put(currentCubeVertex[vertexIndex[k] * 3 + 1]);
+                    v.put(currentCubeVertex[vertexIndex[k] * 3 + 2]);
+
+                    vn.put(originCubeNormal[normalIndex[k] * 3]);
+                    vn.put(originCubeNormal[normalIndex[k] * 3 + 1]);
+                    vn.put(originCubeNormal[normalIndex[k] * 3 + 2]);
+
+                    //                    vt.put(originCubeTextureCoordinate[textureIndex[k] * 2]);
+                    //                    vt.put(originCubeTextureCoordinate[textureIndex[k] * 2 + 1]);
+
+                    if (i == 0) {
+                        vt.put(currentWallFrontTexture[textureIndex[k] * 2]);
+                        vt.put(currentWallFrontTexture[textureIndex[k] * 2 + 1]);
+                    } else if (i == 1) {
+                        vt.put(currentWallBackTexture[textureIndex[k] * 2]);
+                        vt.put(currentWallBackTexture[textureIndex[k] * 2 + 1]);
+                    } else if (i == 2) {
+                        vt.put(currentWallLeftTexture[textureIndex[k] * 2]);
+                        vt.put(currentWallLeftTexture[textureIndex[k] * 2 + 1]);
+                    } else if (i == 3) {
+                        vt.put(currentWallRightTexture[textureIndex[k] * 2]);
+                        vt.put(currentWallRightTexture[textureIndex[k] * 2 + 1]);
+                    } else {
+                        //上下两个面
+                        vt.put(0.5f);
+                        vt.put(0.5f);
+                    }
+
+
+                }
+            }
+
+        }
+    }
+
     public static void addCuboidVertex(FloatBuffer v, FloatBuffer vt, FloatBuffer vn, float rectX, float rectY, float rectZ, float offsetX, float offsetY, float offsetZ, boolean[] adjucent) {
         //每个矩形根据位置不同 重新设置长宽高和偏移
         for (int i = 0; i < currentCubeVertex.length; i++) {
@@ -491,7 +822,7 @@ public class MapDataConverter {
      * @param pathColor rgb值  不包含透明度  例:Color.WHITE
      * @return
      */
-    public static Path3DData convertPathData(float[] xy, int pathColor, float unit, int offsetX, int offsetY) {
+    public static Path3D convertPathData(float[] xy, int pathColor, float unit, int offsetX, int offsetY) {
         if (xy == null) {
             return null;
         }
@@ -513,7 +844,7 @@ public class MapDataConverter {
         float bgGreen = Color.green(pathColor) / 255f;
         float bgBlue = Color.blue(pathColor) / 255f;
 
-        Path3DData path3DData = Path3DData.newBuilder().color(new float[]{bgRed, bgGreen, bgBlue}).vert(vertex).build();
+        Path3D path3DData = Path3D.newBuilder().color(new float[]{bgRed, bgGreen, bgBlue}).vert(vertex).build();
 
         return path3DData;
     }

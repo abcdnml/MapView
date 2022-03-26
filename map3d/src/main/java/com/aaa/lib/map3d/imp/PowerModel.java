@@ -1,12 +1,11 @@
 package com.aaa.lib.map3d.imp;
 
 import com.aaa.lib.map3d.model.ObjModel;
-import com.aaa.lib.map3d.obj.Obj3DData;
+import com.aaa.lib.map3d.obj.MultiObj3D;
 
 public class PowerModel extends ObjModel {
-    public PowerModel(Obj3DData obj3DData) {
-        super();
-        this.data = obj3DData;
+    public PowerModel(MultiObj3D multiObj3D) {
+        super(multiObj3D);
     }
 
 

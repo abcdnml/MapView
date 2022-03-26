@@ -1,6 +1,6 @@
 package com.aaa.lib.map3d.imp;
 
-import com.aaa.lib.map3d.obj.Obj3DData;
+import com.aaa.lib.map3d.obj.MultiObj3D;
 
 public class Furniture {
     int id;
@@ -9,7 +9,7 @@ public class Furniture {
     int y;
     float scale = 1f;
     float rotation;
-    Obj3DData data;
+    MultiObj3D data;
 
     public Furniture() {
 
@@ -77,11 +77,11 @@ public class Furniture {
         this.rotation = rotation;
     }
 
-    public Obj3DData getData() {
+    public MultiObj3D getData() {
         return data;
     }
 
-    public void setData(Obj3DData multiObj) {
+    public void setData(MultiObj3D multiObj) {
         this.data = multiObj;
     }
 
@@ -92,7 +92,7 @@ public class Furniture {
         private int y;
         private float scale = 1f;
         private float rotation;
-        private Obj3DData multiObj;
+        private MultiObj3D multiObj;
 
         private Builder() {
         }
@@ -123,7 +123,7 @@ public class Furniture {
             return this;
         }
 
-        public Builder objData(Obj3DData multiObj) {
+        public Builder objData(MultiObj3D multiObj) {
             this.multiObj = multiObj;
             return this;
         }

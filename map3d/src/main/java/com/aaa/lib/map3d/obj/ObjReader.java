@@ -80,8 +80,8 @@ public class ObjReader {
                     }
                 }
             }
-            obj3D.setVert(alvResult);
-            obj3D.setVertNorl(norlArr);
+            obj3D.setPosition(alvResult);
+            obj3D.setNormal(norlArr);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -94,9 +94,9 @@ public class ObjReader {
      * @param file
      * @return
      */
-    public static Obj3DData readMultiObj(Context context, String file) {
+    public static MultiObj3D readMultiObj(Context context, String file) {
         boolean isAssets;
-        Obj3DData modelData = new Obj3DData();
+        MultiObj3D modelData = new MultiObj3D();
         float top = 0;
         float bottom = 0;
 

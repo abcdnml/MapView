@@ -6,32 +6,45 @@ import android.opengl.GLES30;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 
+import com.aaa.lib.map3d.eye.Eye;
+import com.aaa.lib.map3d.light.DirectLight;
+import com.aaa.lib.map3d.light.Light;
+import com.aaa.lib.map3d.light.LightManager;
 import com.aaa.lib.map3d.model.Model;
+import com.aaa.lib.map3d.move.MoveManager;
+import com.aaa.lib.map3d.move.MovementListener;
 import com.aaa.lib.map3d.obj.ModelData;
-import com.aaa.lib.map3d.utils.MatrixUtils;
+import com.aaa.lib.map3d.program.GLProgram;
+
+import java.util.Arrays;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Renderer, ModelListener {
+public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Renderer, ModelListener, MovementListener {
 
     private static final float MAX_SCALE = 4;
     private static final float MIN_SCALE = 0.25f;
     private final float TOUCH_SCALE_AC = 5;
-    protected ModelManager modelManager;
-    protected float[] modelMatrix = Model.getOriginalMatrix();
-    protected float[] mProjMatrix = new float[16];
-    protected float[] mVMatrix = new float[16];
+
     protected int bgColor;
-    protected float[] eye;
-    protected float[] light;
     protected float rotateX = 0;
     protected float rotateY = 0;
     protected float scale = 1;
-    private TouchHandler touchHandler;
+    protected float[] modelMatrix = Model.getOriginalMatrix();
+    protected float[] mProjMatrix = new float[16];
+    protected float[] mVMatrix = new float[16];
+    protected ModelManager modelManager;
+    protected MoveManager moveManager;
+    protected LightManager lightManager;
     private volatile boolean isCreate = false;
+    private float[] mShadowViewMatrix = new float[16];
+    private float[] mShadowProjMatrix = new float[16];
+    private TouchHandler touchHandler;
+
 
     public Map3DSurfaceView(Context context) {
         super(context);
@@ -44,26 +57,26 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
     }
 
     private void init() {
+        bgColor = Color.argb(1, 33, 162, 254);
+
         setEGLContextClientVersion(3);
         setRenderer(this);
         setRenderMode(RENDERMODE_WHEN_DIRTY);
 
 
+        GLProgram.init(getContext());
 
-        modelManager = new ModelManager();
+        modelManager = new ModelManager(this);
         modelManager.setModelListener(this);
-        bgColor = Color.argb(1, 33, 162, 254);
-        eye = new float[]{
-                0, 9, 0 //eye x y z
-        };
-        light = new float[]{
-                -1f, -1f, -1f,       // direction  x y z
-                0.0f, 0.0f, 0.0f,   // ka
-                1, 1, 1,   // kd
-                1.0f, 1.0f, 1.0f,   // ks
-        };
-
         touchHandler = new TouchHandler(this);
+        moveManager = new MoveManager(this);
+        lightManager=new LightManager();
+
+        //眼睛放到平行光的位置 以光的视角来看物体 形成阴影贴图
+        float[] shadowEye = lightManager.getDirectLight().dirction;
+        Matrix.orthoM(mShadowProjMatrix, 0, -20, 20, -20, 20, 1f, 100);
+        Matrix.setLookAtM(mShadowViewMatrix, 0, -shadowEye[0], -shadowEye[1], -shadowEye[2], 0, 0, 0, 0, 1, 0);
+
     }
 
     @Override
@@ -74,7 +87,7 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
             queueEvent(new Runnable() {
                 @Override
                 public void run() {
-                    model.onCreate(getContext());
+                    modelManager.initData(model);
                 }
             });
         }
@@ -85,18 +98,22 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
         queueEvent(new Runnable() {
             @Override
             public void run() {
-                model.onDestroy();
+                model.clear();
             }
         });
     }
 
     protected void addModel(final Model model) {
-        model.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
-        model.setEye(eye);
-        model.setLight(light);
         modelManager.addModel(model);
     }
 
+    public void remove(Model model) {
+        modelManager.removeModel(model);
+    }
+
+    public void clear() {
+        modelManager.clear();
+    }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -120,29 +137,23 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        isCreate = true;
         setBgColor(bgColor);
         GLES30.glEnable(GLES30.GL_DEPTH_TEST);
-        GLES30.glEnable(GLES30.GL_CULL_FACE_MODE);
-        modelManager.onSurfaceCreate(getContext());
+        GLES30.glEnable(GLES30.GL_CULL_FACE);
+
+        modelManager.initModel();
+        isCreate = true;
     }
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-        GLES30.glViewport(0, 0, width, height);
-
-        float aspectRatio = (width + 0f) / height;
-        //眼睛坐标和法向量一定要算好 要不然 看到别的地方去了
-        Matrix.setLookAtM(mVMatrix, 0, eye[0], eye[1], eye[2], 0, 0, 0, 0, 0, -1);
-        Matrix.perspectiveM(mProjMatrix, 0, 60, aspectRatio, 1f, 100);
-
-        modelManager.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
+        mVMatrix = moveManager.genViewMatrix();
+        Matrix.perspectiveM(mProjMatrix, 0, 45, (width + 0f) / height, 1f, 50);
     }
 
     @Override
-    public void onDrawFrame(GL10 gl) {
-        GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT);
-        modelManager.onDraw();
+    public synchronized void onDrawFrame(GL10 gl) {
+        modelManager.draw(modelMatrix, mVMatrix, mProjMatrix, mShadowViewMatrix, mShadowProjMatrix);
     }
 
     /**
@@ -152,18 +163,23 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
      * @param data
      */
     public void updateModelData(final Model model, final ModelData data) {
-        queueEvent(new Runnable() {
-            @Override
-            public void run() {
-                model.updateModelData(data);
-            }
-        });
+        model.setData(data);
+        if(isCreate){
+            queueEvent(new Runnable() {
+                @Override
+                public void run() {
+                    modelManager.updateData(model);
+                }
+            });
+        }
     }
 
-    //旋转
-    public void rotate(float distanceX, float distanceY) {
+    //旋转整个世界 当只有一个眼睛的时候等同 其实就相当于自己转....
+    public synchronized void rotateWorld(float distanceX, float distanceY) {
         rotateX = rotateX + distanceX;
-//        临时去掉旋转限制
+//        rotateY = rotateY + distanceY;        //去掉旋转限制
+
+        //y轴旋转限制 0~90度之间
         if (rotateY + distanceY > 90 * TOUCH_SCALE_AC || rotateY + distanceY < 0) {
             distanceY = 0;
         } else {
@@ -172,35 +188,16 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
 
         Matrix.setRotateM(modelMatrix, 0, -rotateY / TOUCH_SCALE_AC, 1, 0, 0);
         Matrix.rotateM(modelMatrix, 0, -rotateX / TOUCH_SCALE_AC, 0, 1, 0);
-        Matrix.scaleM(modelMatrix, 0, scale, scale, scale);
-
-        float[] oldLightDir=new float[4];
-        oldLightDir[0]=-1;
-        oldLightDir[1]=-1;
-        oldLightDir[2]=-1;
-        oldLightDir[3]=-1;
-
-        float[] newLightDir=new float[4];
-
-        Matrix.multiplyMV(newLightDir,0, modelMatrix,0,oldLightDir,0);
-
-
-        float[] newLight=new float[12];
-        System.arraycopy(light,0,newLight,0,12);
-        newLight[0]=newLightDir[0];
-        newLight[1]=newLightDir[1];
-        newLight[2]=newLightDir[2];
-        modelManager.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
-        modelManager.setLight(newLight);
+        float[] shadowEye=lightManager.getRotatedLight(modelMatrix);
+        Matrix.scaleM(modelMatrix, 0, scale, scale, scale);        //scale 必须放在设置光线后  因为光线不需要缩放 否则 地图扩大后看不到阴影
+        Matrix.setLookAtM(mShadowViewMatrix, 0, -shadowEye[0], -shadowEye[1], -shadowEye[2], 0, 0, 0, 0, 1, 0);
         requestRender();
     }
 
-    public void scale(float s) {
+    public synchronized void scale(float s) {
         //这样写可以造成一个缩放回弹的效果 回弹效果要在scaleEnd时重新设置回边界大小
         Matrix.scaleM(modelMatrix, 0, s, s, s);
         scale = scale * s;
-
-        modelManager.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
         requestRender();
     }
 
@@ -217,29 +214,39 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
         }
         Matrix.scaleM(modelMatrix, 0, s, s, s);
 
-        modelManager.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
         requestRender();
     }
 
     public void move(float distanceX, float distanceY, float distanceZ) {
-        eye[0] = eye[0] + distanceX;
-        eye[1] = eye[1] + distanceY;
-        eye[2] = eye[2] + distanceZ;
-        Matrix.setLookAtM(mVMatrix, 0, eye[0], eye[1], eye[2], 0, 0, 0, 0, 0, -1);
-
-        modelManager.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
+        mVMatrix = moveManager.move(distanceX, distanceY, distanceZ);
         requestRender();
     }
 
     public void moveTo(float x, float y, float z) {
-        eye[0] = x;
-        eye[1] = y;
-        eye[2] = z;
-        Matrix.setLookAtM(mVMatrix, 0, eye[0], eye[1], eye[2], 0, 0, 0, 0, 0, -1);
-
-        modelManager.setMatrix(modelMatrix, mVMatrix, mProjMatrix);
-
+        mVMatrix = moveManager.moveTo(x, y, z);
         requestRender();
     }
 
+    public Light getLight() {
+        return lightManager.getDirectLight();
+    }
+
+    public Eye getEye() {
+        return moveManager.getEye();
+    }
+
+    @Override
+    public void onMove(float positionX, float positionY, float positionZ, float directionX, float directionY, float directionZ) {
+        Log.i("onMove", "position: (" + positionX + "," + positionY + "," + positionZ + ")");
+        Log.i("onMove", "direction: (" + directionX + "," + directionY + "," + directionZ + ")");
+    }
+
+    /**
+     * 俯仰角(Pitch)、偏航角(Yaw)和滚转角(Roll)
+     *
+     */
+    public void rotateSelf(float pitch, float yaw, float roll) {
+        mVMatrix = moveManager.rotate(pitch, yaw, roll);
+        requestRender();
+    }
 }

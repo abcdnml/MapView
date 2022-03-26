@@ -1,13 +1,13 @@
 package com.aaa.lib.map3d.imp;
 
-import com.aaa.lib.map3d.obj.Obj3DData;
+import com.aaa.lib.map3d.obj.MultiObj3D;
 
 public class Power {
     int x;
     int y;
     float scale = 1f;
     float rotation;
-    Obj3DData data;
+    MultiObj3D data;
 
     private Power(Builder builder) {
 
@@ -50,11 +50,11 @@ public class Power {
         this.rotation = rotation;
     }
 
-    public Obj3DData getData() {
+    public MultiObj3D getData() {
         return data;
     }
 
-    public void setData(Obj3DData data) {
+    public void setData(MultiObj3D data) {
         this.data = data;
     }
 
@@ -63,7 +63,7 @@ public class Power {
         private int y;
         private float scale;
         private float rotation;
-        private Obj3DData data;
+        private MultiObj3D data;
 
         private Builder() {
         }
@@ -85,7 +85,7 @@ public class Power {
             return this;
         }
 
-        public Builder data(Obj3DData data) {
+        public Builder data(MultiObj3D data) {
             this.data = data;
             return this;
         }

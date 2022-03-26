@@ -1,5 +1,7 @@
 package com.aaa.lib.map3d.obj;
 
+
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -9,23 +11,28 @@ import java.util.ArrayList;
  * Created by wuwang on 2017/2/22
  */
 
-public class Obj3D {
+public class Obj3D extends ModelData {
     public int vertCount;
-    public FloatBuffer vert;
-    public FloatBuffer vertNorl;
-    public FloatBuffer vertTexture;
+    public FloatBuffer position;
+    public FloatBuffer normal;
+    public FloatBuffer texture;
 
     public MtlInfo mtl;
-    public ArrayList<Float> tempVertTexture;
-    private ArrayList<Float> tempVert;
-    private ArrayList<Float> tempVertNorl;
+    public ArrayList<Float> tempTexture;
+    private ArrayList<Float> tempPosition;
+    private ArrayList<Float> tempNormal;
+
+    public int modelVao;
+    public int shadowVao;
+    public int textureKd;
+    public int textureKd_normal;
 
 
     private Obj3D(Builder builder) {
         vertCount = builder.vertCount;
-        vert = builder.vert;
-        vertNorl = builder.vertNorl;
-        vertTexture = builder.vertTexture;
+        position = builder.vert;
+        normal = builder.vertNorl;
+        texture = builder.vertTexture;
         mtl = builder.mtl;
     }
 
@@ -37,79 +44,79 @@ public class Obj3D {
     }
 
     public void addVert(float d) {
-        if (tempVert == null) {
-            tempVert = new ArrayList<>();
+        if (tempPosition == null) {
+            tempPosition = new ArrayList<>();
         }
-        tempVert.add(d);
+        tempPosition.add(d);
     }
 
     public void addVertTexture(float d) {
-        if (tempVertTexture == null) {
-            tempVertTexture = new ArrayList<>();
+        if (tempTexture == null) {
+            tempTexture = new ArrayList<>();
         }
-        tempVertTexture.add(d);
+        tempTexture.add(d);
     }
 
     public void addVertNorl(float d) {
-        if (tempVertNorl == null) {
-            tempVertNorl = new ArrayList<>();
+        if (tempNormal == null) {
+            tempNormal = new ArrayList<>();
         }
-        tempVertNorl.add(d);
+        tempNormal.add(d);
     }
 
     public void dataLock() {
-        if (tempVert != null) {
-            setVert(tempVert);
-            tempVert.clear();
-            tempVert = null;
+        if (tempPosition != null) {
+            setPosition(tempPosition);
+            tempPosition.clear();
+            tempPosition = null;
         }
-        if (tempVertTexture != null) {
-            setVertTexture(tempVertTexture);
-            tempVertTexture.clear();
-            tempVertTexture = null;
+        if (tempTexture != null) {
+            setTexture(tempTexture);
+            tempTexture.clear();
+            tempTexture = null;
         }
-        if (tempVertNorl != null) {
-            setVertNorl(tempVertNorl);
-            tempVertNorl.clear();
-            tempVertNorl = null;
+        if (tempNormal != null) {
+            setNormal(tempNormal);
+            tempNormal.clear();
+            tempNormal = null;
         }
     }
 
-    public void setVert(ArrayList<Float> data) {
+    public void setPosition(ArrayList<Float> data) {
         int size = data.size();
         ByteBuffer buffer = ByteBuffer.allocateDirect(size * 4);
         buffer.order(ByteOrder.nativeOrder());
-        vert = buffer.asFloatBuffer();
+        position = buffer.asFloatBuffer();
         for (int i = 0; i < size; i++) {
-            vert.put(data.get(i));
+            position.put(data.get(i));
         }
-        vert.position(0);
+        position.position(0);
         vertCount = size / 3;
     }
 
-    public void setVertNorl(ArrayList<Float> data) {
+    public void setNormal(ArrayList<Float> data) {
         int size = data.size();
         ByteBuffer buffer = ByteBuffer.allocateDirect(size * 4);
         buffer.order(ByteOrder.nativeOrder());
-        vertNorl = buffer.asFloatBuffer();
+        normal = buffer.asFloatBuffer();
         for (int i = 0; i < size; i++) {
-            vertNorl.put(data.get(i));
+            normal.put(data.get(i));
         }
-        vertNorl.position(0);
+        normal.position(0);
     }
 
-    public void setVertTexture(ArrayList<Float> data) {
+    public void setTexture(ArrayList<Float> data) {
         int size = data.size();
         ByteBuffer buffer = ByteBuffer.allocateDirect(size * 4);
         buffer.order(ByteOrder.nativeOrder());
-        vertTexture = buffer.asFloatBuffer();
+        texture = buffer.asFloatBuffer();
         for (int i = 0; i < size; ) {
-            vertTexture.put(data.get(i));
+            texture.put(data.get(i));
             i++;
-            vertTexture.put(data.get(i));
+            texture.put(data.get(i));
             i++;
         }
-        vertTexture.position(0);
+        texture.position(0);
     }
 
 
@@ -128,17 +135,17 @@ public class Obj3D {
             return this;
         }
 
-        public Builder vert(FloatBuffer vert) {
+        public Builder position(FloatBuffer vert) {
             this.vert = vert;
             return this;
         }
 
-        public Builder vertNorl(FloatBuffer vertNorl) {
+        public Builder normal(FloatBuffer vertNorl) {
             this.vertNorl = vertNorl;
             return this;
         }
 
-        public Builder vertTexture(FloatBuffer vertTexture) {
+        public Builder texture(FloatBuffer vertTexture) {
             this.vertTexture = vertTexture;
             return this;
         }

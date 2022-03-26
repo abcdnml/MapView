@@ -25,7 +25,7 @@ public class TouchHandler {
 
             @Override
             public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-                mapView.rotate(distanceX, distanceY);
+                mapView.rotateWorld(distanceX, distanceY);
                 return true;
             }
         });

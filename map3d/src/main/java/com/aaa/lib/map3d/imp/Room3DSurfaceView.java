@@ -4,11 +4,14 @@ import android.content.Context;
 import android.util.AttributeSet;
 
 import com.aaa.lib.map3d.Map3DSurfaceView;
+import com.aaa.lib.map3d.area.RectangleArea;
+import com.aaa.lib.map3d.model.AreaModel;
 import com.aaa.lib.map3d.model.LineModel;
 import com.aaa.lib.map3d.model.Model;
 import com.aaa.lib.map3d.model.ObjModel;
-import com.aaa.lib.map3d.obj.Obj3DData;
-import com.aaa.lib.map3d.obj.Path3DData;
+import com.aaa.lib.map3d.obj.Area3D;
+import com.aaa.lib.map3d.obj.MultiObj3D;
+import com.aaa.lib.map3d.obj.Path3D;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +21,7 @@ public class Room3DSurfaceView extends Map3DSurfaceView {
     private LineModel pathModel;
     private SweeperModel sweeperModel;
     private PowerModel powerModer;
+    private List<AreaModel> areaModelList;
 
     public Room3DSurfaceView(Context context) {
         super(context);
@@ -34,6 +38,7 @@ public class Room3DSurfaceView extends Map3DSurfaceView {
         addModel(mapModel);
         pathModel = new LineModel();
         addModel(pathModel);
+        areaModelList = new ArrayList<>();
     }
 
     /**
@@ -53,7 +58,7 @@ public class Room3DSurfaceView extends Map3DSurfaceView {
         //计算地图可裁剪区域 用于居中
         mapModel.setClipArea(MapDataConverter.getClipArea(width, height, mapData));
 
-        Obj3DData obj3D = MapDataConverter.mapDataToObj3D(width, height, mapData, mapModel.getUnit(), mapModel.getMapCenterX(), mapModel.getMapCenterY());
+        MultiObj3D obj3D = MapDataConverter.mapDataToObj3D(getContext(), width, height, mapData, mapModel.getUnit(), mapModel.getMapCenterX(), mapModel.getMapCenterY());
 
         updateModelData(mapModel, obj3D);
 
@@ -64,9 +69,36 @@ public class Room3DSurfaceView extends Map3DSurfaceView {
      * @param path 路径数据 格式: [x1,y1,x2,y2,x3,y3.......]
      */
     public void refreshPath(float[] path, int pathColor) {
-        Path3DData path3DData = MapDataConverter.convertPathData(path, pathColor, mapModel.getUnit(), mapModel.getMapCenterX(), mapModel.getMapCenterY());
+        Path3D path3DData = MapDataConverter.convertPathData(path, pathColor, mapModel.getUnit(), mapModel.getMapCenterX(), mapModel.getMapCenterY());
         updateModelData(pathModel, path3DData);
         requestRender();
+    }
+
+    public void refreshArea(List<RectangleArea> areaList) {
+        removeArea();
+        for (int i = 0; i < areaList.size(); i++) {
+            Area3D areaObject = MapDataConverter.areaToObj(getContext(), mapModel.getUnit(), areaList.get(i));
+            AreaModel areaModel = new AreaModel(areaObject);
+            areaModel.setRotate(0, areaList.get(i).rotate, 0);
+            addModel(areaModel);
+        }
+        requestRender();
+    }
+
+    public void removeArea() {
+        List<AreaModel> areaModelList = getAreaModel();
+        modelManager.getAllModel().removeAll(areaModelList);
+    }
+
+    public List<AreaModel> getAreaModel() {
+        List<AreaModel> areaModels = new ArrayList<>();
+        for (int i = 0; i < modelManager.getAllModel().size(); i++) {
+            Model model = modelManager.getAllModel().get(i);
+            if (model instanceof AreaModel) {
+                areaModels.add((AreaModel) model);
+            }
+        }
+        return areaModels;
     }
 
     /**
