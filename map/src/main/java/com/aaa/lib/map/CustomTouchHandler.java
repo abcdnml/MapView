@@ -38,7 +38,7 @@ public class CustomTouchHandler {
                 if (mode == MODE_SCALE) {
                     float rotation = rotation(event) - lastRotation;
                     float newDistance = spacing(event);
-                    float scale = newDistance / lastRotation;
+                    float scale = newDistance / lastDistance;
                     mapView.scale(scale, middlePoint.x, middlePoint.y);// 縮放
                     mapView.rotate(rotation, middlePoint.x, middlePoint.y);// 旋轉
 
@@ -46,7 +46,7 @@ public class CustomTouchHandler {
                     lastDistance =newDistance;
 
                 } else if (mode == MODE_DRAG) {
-                    mapView.translate(x-downPoint.x,y-downPoint.y);
+                    mapView.translate(downPoint.x-x,downPoint.y-x);
                     downPoint.x=x;
                     downPoint.y=y;
                 }
