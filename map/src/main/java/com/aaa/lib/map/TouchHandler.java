@@ -15,9 +15,9 @@ public class TouchHandler {
     private boolean isScale;
     private MapView mMapView;
 
-    public TouchHandler(Context context, final MapView mapView) {
+    public TouchHandler(MapView mapView) {
         mMapView = mapView;
-        mGestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+        mGestureDetector = new GestureDetector(mapView.getContext(), new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onDown(MotionEvent e) {
                 return true;
@@ -26,13 +26,13 @@ public class TouchHandler {
             @Override
             public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
                 Log.i(TAG, "onScroll distanceX : " + distanceX + "  distanceY: " + distanceY);
-                mapView.translate(distanceX,distanceY);
+                mMapView.translate(distanceX,distanceY);
                 return true;
             }
         });
         mGestureDetector.setIsLongpressEnabled(false);
 
-        mScaleGestureDetector = new ScaleGestureDetector(context, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+        mScaleGestureDetector = new ScaleGestureDetector(mapView.getContext(), new ScaleGestureDetector.SimpleOnScaleGestureListener() {
             private float preScaleFactor;
             private float curScaleFactor;
 

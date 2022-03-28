@@ -19,7 +19,7 @@ public class MapView<T extends LayerManager> extends View {
     protected float[] mMatrixValue;
     protected T mLayerManager;
     protected int bgColor;
-    private TouchHandler mTouchHandler;
+    private CustomTouchHandler mTouchHandler;
     private boolean canTouch = true;
 
     public MapView(Context context) {
@@ -39,7 +39,7 @@ public class MapView<T extends LayerManager> extends View {
         mMatrix = new Matrix();
         mMatrixValue = new float[9];
         bgColor = Color.WHITE;
-        mTouchHandler = new TouchHandler(this.getContext(), this);
+        mTouchHandler = new CustomTouchHandler(this);
     }
 
     @Override
@@ -86,6 +86,16 @@ public class MapView<T extends LayerManager> extends View {
 
     public void translate(float x, float y) {
         mMatrix.postTranslate(x, y);
+        postInvalidate();
+    }
+
+    /**
+     * 旋转地图
+     * @param x
+     * @param y
+     */
+    public void rotate(float rotate, float x, float y) {
+        mMatrix.postRotate(rotate, x, y);
         postInvalidate();
     }
 
