@@ -36,17 +36,20 @@ public class CustomTouchHandler {
                 break;
             case MotionEvent.ACTION_MOVE:
                 if (mode == MODE_SCALE) {
-                    float rotation = rotation(event) - lastRotation;
+                    float rotation = rotation(event) ;
                     float newDistance = spacing(event);
                     float scale = newDistance / lastDistance;
+                    float newRotation = rotation(event) - lastRotation;
+
                     mapView.scale(scale, middlePoint.x, middlePoint.y);// 縮放
-                    mapView.rotate(rotation, middlePoint.x, middlePoint.y);// 旋轉
+                    mapView.rotate(newRotation, middlePoint.x, middlePoint.y);// 旋轉
 
                     lastRotation =rotation;
                     lastDistance =newDistance;
 
                 } else if (mode == MODE_DRAG) {
-                    mapView.translate(downPoint.x-x,downPoint.y-x);
+
+                    mapView.translate(downPoint.x-x,downPoint.y-y);
                     downPoint.x=x;
                     downPoint.y=y;
                 }

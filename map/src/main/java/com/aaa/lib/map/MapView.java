@@ -19,7 +19,8 @@ public class MapView<T extends LayerManager> extends View {
     protected float[] mMatrixValue;
     protected T mLayerManager;
     protected int bgColor;
-    private CustomTouchHandler mTouchHandler;
+//    private CustomTouchHandler mTouchHandler;
+    private TouchHandler mTouchHandler;
     private boolean canTouch = true;
 
     public MapView(Context context) {
@@ -39,7 +40,8 @@ public class MapView<T extends LayerManager> extends View {
         mMatrix = new Matrix();
         mMatrixValue = new float[9];
         bgColor = Color.WHITE;
-        mTouchHandler = new CustomTouchHandler(this);
+//        mTouchHandler = new CustomTouchHandler(this);
+        mTouchHandler = new TouchHandler(this);
     }
 
     @Override
