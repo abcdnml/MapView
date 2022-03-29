@@ -55,6 +55,19 @@ public class ModelManager {
             modelListener.onModelAdd(model);
         }
     }
+    public void addModels(List<Model> models) {
+        if (models == null) {
+            return;
+        }
+
+        modelList.addAll(models);
+        for(int i=0;i<modelList.size();i++){
+            if (modelListener != null) {
+                modelListener.onModelAdd(modelList.get(i));
+            }
+        }
+
+    }
 
     public List<Model> getAllModel() {
         return modelList;

@@ -21,7 +21,6 @@ public class Room3DSurfaceView extends Map3DSurfaceView {
     private LineModel pathModel;
     private SweeperModel sweeperModel;
     private PowerModel powerModer;
-    private List<PlaneModel> areaModelList;
 
     public Room3DSurfaceView(Context context) {
         super(context);
@@ -38,7 +37,6 @@ public class Room3DSurfaceView extends Map3DSurfaceView {
         addModel(mapModel);
         pathModel = new LineModel();
         addModel(pathModel);
-        areaModelList = new ArrayList<>();
     }
 
     /**
