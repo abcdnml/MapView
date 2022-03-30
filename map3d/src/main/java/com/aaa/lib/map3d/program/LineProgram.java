@@ -39,7 +39,8 @@ public class LineProgram extends GLProgram<LineModel> {
         GLES30.glUseProgram(programId);
         GLES30.glLineWidth(4);
 
-        GLES30.glUniformMatrix4fv(LOCATION_MAT_MODEL, 1, false, mMatrix, 0);
+        float[] conbinedModelMatrix = conbineModelMatrix(model, mMatrix);
+        GLES30.glUniformMatrix4fv(LOCATION_MAT_MODEL, 1, false, conbinedModelMatrix, 0);
         GLES30.glUniformMatrix4fv(LOCATION_MAT_VIEW, 1, false, vMatrix, 0);
         GLES30.glUniformMatrix4fv(LOCATION_MAT_PROJ, 1, false, pMatrix, 0);
 
