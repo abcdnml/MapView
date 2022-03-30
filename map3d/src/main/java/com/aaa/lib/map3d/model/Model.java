@@ -63,9 +63,9 @@ public abstract class Model<T> {
 //    public abstract List<T> getData();
 
     public void clear() {
-        scale = new float[]{1, 1, 1};
-        offset = new float[3];
-        rotate = new float[3];
+//        scale = new float[]{1, 1, 1};
+//        offset = new float[3];
+//        rotate = new float[3];
         if (vbo != null) {
             GLES30.glDeleteBuffers(vbo.length, vbo, 0);
         }
