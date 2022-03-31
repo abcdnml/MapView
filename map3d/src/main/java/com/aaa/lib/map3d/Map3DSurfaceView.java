@@ -38,6 +38,7 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
     protected float fovy = 45;
     protected float near = 1;
     protected float far = 50;
+    protected float lightDistance=10;
     protected float[] modelMatrix = Model.getOriginalMatrix();
     protected float[] mProjMatrix = new float[16];
     protected float[] mVMatrix = new float[16];
@@ -77,9 +78,10 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
         lightManager=new LightManager();
 
         //眼睛放到平行光的位置 以光的视角来看物体 形成阴影贴图
-        float[] shadowEye = lightManager.getDirectLight().dirction;
-        Matrix.orthoM(mShadowProjMatrix, 0, -20, 20, -20, 20, 1f, 100);
-        Matrix.setLookAtM(mShadowViewMatrix, 0, -shadowEye[0], -shadowEye[1], -shadowEye[2], 0, 0, 0, 0, 1, 0);
+        float[] shadowEye = lightManager.getRotatedLight(modelMatrix);
+        Matrix.orthoM(mShadowProjMatrix, 0, -lightDistance, lightDistance, -lightDistance, lightDistance, 1f, lightDistance*2);
+        Matrix.setLookAtM(mShadowViewMatrix, 0, -shadowEye[0]*lightDistance, -shadowEye[1]*lightDistance, -shadowEye[2]*lightDistance, 0, 0, 0, 0, 1, 0);
+        Log.i("map3dsurfaceview " ,"init shadow eye ; "+ shadowEye[0]*lightDistance+" " +shadowEye[1]*lightDistance+" "+ shadowEye[2]*lightDistance);
 
     }
 
@@ -193,9 +195,10 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
 
         Matrix.setRotateM(modelMatrix, 0, -rotateY / TOUCH_SCALE_AC, 1, 0, 0);
         Matrix.rotateM(modelMatrix, 0, -rotateX / TOUCH_SCALE_AC, 0, 1, 0);
-        float[] shadowEye=lightManager.getRotatedLight(modelMatrix);
         Matrix.scaleM(modelMatrix, 0, scale, scale, scale);        //scale 必须放在设置光线后  因为光线不需要缩放 否则 地图扩大后看不到阴影
-        Matrix.setLookAtM(mShadowViewMatrix, 0, -shadowEye[0], -shadowEye[1], -shadowEye[2], 0, 0, 0, 0, 1, 0);
+        float[] shadowEye=lightManager.getRotatedLight(modelMatrix);
+        Log.i("map3dsurfaceview " ,"rotateWorld shadow eye ; "+ shadowEye[0]*lightDistance+" " +shadowEye[1]*lightDistance+" "+ shadowEye[2]*lightDistance);
+        Matrix.setLookAtM(mShadowViewMatrix, 0, -shadowEye[0]*lightDistance, -shadowEye[1]*lightDistance, -shadowEye[2]*lightDistance, 0, 0, 0, 0, 1, 0);
         requestRender();
     }
 
@@ -252,8 +255,17 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
         this.near=near;
         this.far=far;
         Matrix.perspectiveM(mProjMatrix, 0, fovy, aspect, near, far);
+
         requestRender();
     }
+    public void setShadowSight(float distance){
+        lightDistance=distance;
+        float[] shadowEye=lightManager.getRotatedLight(modelMatrix);
+        Matrix.setLookAtM(mShadowViewMatrix, 0, -shadowEye[0]*distance, -shadowEye[1]*distance, -shadowEye[2]*distance, 0, 0, 0, 0, 1, 0);
+        Matrix.orthoM(mShadowProjMatrix, 0, -distance, distance, -distance, distance, 1, distance*2);
+        Log.i("map3dsurfaceview " ,"setShadowSight shadow eye ; "+ shadowEye[0]*lightDistance+" " +shadowEye[1]*lightDistance+" "+ shadowEye[2]*lightDistance);
+    }
+
 
     @Override
     public void onMove(float positionX, float positionY, float positionZ, float directionX, float directionY, float directionZ) {

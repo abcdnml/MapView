@@ -133,8 +133,10 @@ public class Map3DActivity extends AppCompatActivity {
         map3DSurfaceView.refreshMap(ldMapBean.width, ldMapBean.height, ldMapBean.resolution / 2, mapData);
 
         float eyeDistance=(ldMapBean.width>ldMapBean.height? ldMapBean.width:ldMapBean.height)* ldMapBean.resolution;
-        map3DSurfaceView.moveTo(0,eyeDistance/2+1,0);
-        map3DSurfaceView.setSight(1,eyeDistance+2);
+        map3DSurfaceView.moveTo(0,eyeDistance,0);
+        map3DSurfaceView.setSight(1,eyeDistance+eyeDistance/2);
+        map3DSurfaceView.setShadowSight(eyeDistance);
+        LogUtils.i("eye distance: "+ eyeDistance);
 
         //转换路径数据  根据项目不同
         float[] pathXY = new float[ldMapBean.path.size()];
