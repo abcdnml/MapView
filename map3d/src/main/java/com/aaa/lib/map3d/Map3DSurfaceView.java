@@ -34,6 +34,10 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
     protected float rotateX = 0;
     protected float rotateY = 0;
     protected float scale = 1;
+    protected float aspect = 1;
+    protected float fovy = 45;
+    protected float near = 1;
+    protected float far = 50;
     protected float[] modelMatrix = Model.getOriginalMatrix();
     protected float[] mProjMatrix = new float[16];
     protected float[] mVMatrix = new float[16];
@@ -148,7 +152,8 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         mVMatrix = moveManager.genViewMatrix();
-        Matrix.perspectiveM(mProjMatrix, 0, 45, (width + 0f) / height, 1f, 50);
+        aspect=(width + 0f) / height;
+        Matrix.perspectiveM(mProjMatrix, 0, fovy, aspect, near, far);
     }
 
     @Override
@@ -233,6 +238,21 @@ public class Map3DSurfaceView extends GLSurfaceView implements GLSurfaceView.Ren
 
     public Eye getEye() {
         return moveManager.getEye();
+    }
+
+    public void setSight(float near ,float far){
+        this.setSight(45,near,far);
+    }
+    public void setSight(float fovy,float near ,float far){
+        this.setSight(fovy,aspect,near,far);
+    }
+    public void setSight(float fovy,float aspect,float near ,float far){
+        this.aspect=aspect;
+        this.fovy=fovy;
+        this.near=near;
+        this.far=far;
+        Matrix.perspectiveM(mProjMatrix, 0, fovy, aspect, near, far);
+        requestRender();
     }
 
     @Override

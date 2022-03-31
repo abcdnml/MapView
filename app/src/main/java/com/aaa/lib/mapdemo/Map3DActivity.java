@@ -29,13 +29,7 @@ public class Map3DActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map3d);
         map3DSurfaceView = findViewById(R.id.sv_world);
-
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-            }
-        }, 1000);
-                map();
+        map();
         /*handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -138,6 +132,9 @@ public class Map3DActivity extends AppCompatActivity {
         //刷新地图
         map3DSurfaceView.refreshMap(ldMapBean.width, ldMapBean.height, ldMapBean.resolution / 2, mapData);
 
+        float eyeDistance=(ldMapBean.width>ldMapBean.height? ldMapBean.width:ldMapBean.height)* ldMapBean.resolution;
+        map3DSurfaceView.moveTo(0,eyeDistance/2+1,0);
+        map3DSurfaceView.setSight(1,eyeDistance+2);
 
         //转换路径数据  根据项目不同
         float[] pathXY = new float[ldMapBean.path.size()];
