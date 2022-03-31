@@ -7,7 +7,6 @@ import android.opengl.GLUtils;
 import android.opengl.Matrix;
 import android.util.Log;
 
-
 import com.aaa.lib.map3d.model.Model;
 import com.aaa.lib.map3d.utils.ShaderUtil;
 
@@ -23,6 +22,7 @@ public abstract class GLProgram<T> {
 
     protected static Context context;
     protected int programId;
+    protected float[] tempMatrix = new float[16];
 
     public GLProgram() {
     }
@@ -56,27 +56,26 @@ public abstract class GLProgram<T> {
 
     public boolean create(String vertexShaderCode, String fragmentShaderCode) {
         programId = ShaderUtil.createProgram(vertexShaderCode, fragmentShaderCode);
-        Log.i("GLProgram", "program: "+ programId);
+        Log.i("GLProgram", "program: " + programId);
         initLocation();
         return programId == 0;
     }
 
     public float[] conbineModelMatrix(Model model, float[] worldMMatrix) {
-        float[] matrix = new float[16];
-        System.arraycopy(worldMMatrix, 0, matrix, 0, worldMMatrix.length);
+        System.arraycopy(worldMMatrix, 0, tempMatrix, 0, worldMMatrix.length);
 
         //先做模型本身的 平移/旋转/缩放, 顺序不能乱
         float[] offset = model.getOffset();
-        Matrix.translateM(matrix, 0, offset[0], offset[1], offset[2]);
+        Matrix.translateM(tempMatrix, 0, offset[0], offset[1], offset[2]);
 
         float[] rotate = model.getRotate();
-        Matrix.rotateM(matrix, 0, rotate[0], 1, 0, 0);
-        Matrix.rotateM(matrix, 0, rotate[1], 0, 1, 0);
-        Matrix.rotateM(matrix, 0, rotate[2], 0, 0, 1);
+        Matrix.rotateM(tempMatrix, 0, rotate[0], 1, 0, 0);
+        Matrix.rotateM(tempMatrix, 0, rotate[1], 0, 1, 0);
+        Matrix.rotateM(tempMatrix, 0, rotate[2], 0, 0, 1);
 
         float[] scale = model.getScale();
-        Matrix.scaleM(matrix, 0, scale[0], scale[1], scale[2]);
-        return matrix;
+        Matrix.scaleM(tempMatrix, 0, scale[0], scale[1], scale[2]);
+        return tempMatrix;
     }
 
 

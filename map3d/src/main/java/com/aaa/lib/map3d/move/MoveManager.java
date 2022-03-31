@@ -5,6 +5,8 @@ import android.util.Log;
 
 import com.aaa.lib.map3d.eye.Eye;
 
+import java.util.Arrays;
+
 
 public class MoveManager {
     Eye eye;
@@ -25,8 +27,8 @@ public class MoveManager {
     public MoveManager() {
         eye = new Eye();
         eye.position = new float[]{0, 10, 0};
-        eye.direction = new float[]{0, 0, -1}; //如果以上北下南左西右东 逆时针方向为正方向 默认朝向北方
-        eye.euler = new float[]{0, 0, 0}; //如果是0 0 0 是面向东边  所以与上面对应 -90度是北方
+        eye.direction = new float[]{0, -1, 0}; //如果以上北下南左西右东 逆时针方向为正方向 默认朝向北方
+        eye.euler = new float[]{0, -90, 0}; //如果是0 0 0 是面向东边  所以与上面对应 偏航角-90度是北方
         eye.normal = new float[]{0, 0, -1};
         rotate(0, 0, 0);
     }
@@ -163,6 +165,7 @@ public class MoveManager {
         eye.direction[0] = (float) Math.cos(Math.toRadians(eulerAngle[0])) * (float) Math.cos(Math.toRadians(eulerAngle[1]));
         eye.direction[1] = (float) Math.sin(Math.toRadians(eulerAngle[0]));
         eye.direction[2] = (float) Math.cos(Math.toRadians(eulerAngle[0])) * (float) Math.sin(Math.toRadians(eulerAngle[1]));
+        Log.i("rotateTo","direction : "+ Arrays.toString(eye.direction));
         eye.direction = normalize(eye.direction); //转换成单位向量  在运动的时候好计算运动距离  速度
 
         return genViewMatrix();
